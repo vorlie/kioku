@@ -1,0 +1,29 @@
+/* ================================================================
+   Application Layout
+   ================================================================ */
+
+.app-container {
+    display: flex;
+    flex-direction: column;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background: var(--surface);
+}
+
+.app-layout {
+    display: flex;
+    flex: 1;
+    margin-top: 32px;
+    height: calc(100vh - 32px);
+    width: 100%;
+    overflow: hidden;
+}
+
+.app-content {
+    flex: 1;
+    padding: 24px;
+    overflow-y: auto;
+    background: var(--background);
+    border-top-left-radius: var(--radius-xl);
+}

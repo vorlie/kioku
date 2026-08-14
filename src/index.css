@@ -1,0 +1,24 @@
+/* Design */
+@import "./styles/design/tokens.css";
+@import "./styles/design/colors.css";
+
+/* Layout */
+@import "./styles/layout/layout.css";
+@import "./styles/layout/sidebar.css";
+@import "./styles/layout/titlebar.css";
+@import "./styles/layout/pageheader.css";
+
+/* Components */
+@import "./styles/components/mediacard.css";
+@import "./styles/components/scroll.css";
+@import "./styles/components/stats.css";
+@import "./styles/components/components.css";
+@import "./styles/components/relations.css";
+@import "./styles/components/airingschedule.css";
+@import "./styles/components/mediadetail.css";
+
+/* Pages */
+
+@import "./styles/pages/home.css";
+@import "./styles/pages/search.css";
+@import "./styles/pages/settings.css";

@@ -1,0 +1,190 @@
+:root {
+  /* ============================================================
+     Spacing
+     ============================================================ */
+
+  --space-1: 0.25rem;  /* 4px */
+  --space-2: 0.5rem;   /* 8px */
+  --space-3: 0.75rem;  /* 12px */
+  --space-4: 1rem;     /* 16px */
+  --space-5: 1.25rem;  /* 20px */
+  --space-6: 1.5rem;   /* 24px */
+  --space-7: 2rem;     /* 32px */
+  --space-8: 2.5rem;   /* 40px */
+  --space-9: 3rem;     /* 48px */
+  --space-10: 4rem;    /* 64px */
+
+  /* ============================================================
+     Radius
+     ============================================================ */
+
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-full: 9999px;
+
+  /* ============================================================
+     Typography
+     ============================================================ */
+
+  --font-sans: "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+
+  --font-size-display: 2.5rem;
+  --font-size-heading: 1.75rem;
+  --font-size-title: 1.25rem;
+  --font-size-body: 0.9375rem;
+  --font-size-small: 0.8125rem;
+  --font-size-caption: 0.75rem;
+
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  --line-height-display: 1.2;
+  --line-height-heading: 1.3;
+  --line-height-title: 1.4;
+  --line-height-body: 1.5;
+  --line-height-small: 1.4;
+  --line-height-caption: 1.3;
+
+  /* ============================================================
+     Motion
+     ============================================================ */
+
+  --duration-fast: 120ms;
+  --duration-normal: 180ms;
+  --duration-slow: 250ms;
+
+  --ease-default: ease;
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  /* ============================================================
+     Shadows
+     ============================================================ */
+
+  --shadow-sm: 0 2px 6px rgb(0 0 0 / 20%);
+  --shadow-md: 0 8px 20px rgb(0 0 0 / 25%);
+  --shadow-lg: 0 16px 40px rgb(0 0 0 / 35%);
+
+  /* ============================================================
+     Layout
+     ============================================================ */
+
+  --sidebar-width: 240px;
+  --content-max-width: 1600px;
+
+  /* ============================================================
+     Defaults
+     ============================================================ */
+  --success: #7acb8a;
+  --warning: #e4c66a;
+  --danger: #e07a7a;
+  --info: #75b7df;
+}
+
+
+/* ================================================================
+   Reset
+   ================================================================ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body,
+#root {
+  min-width: 0;
+  min-height: 100%;
+}
+
+body {
+  min-height: 100vh;
+
+  font-family: var(--font-sans);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-body);
+
+  color: var(--text);
+  background: var(--background);
+
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+
+/* ================================================================
+   Form controls
+   ================================================================ */
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+
+/* ================================================================
+   Focus
+   ================================================================ */
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+
+/* ================================================================
+   Utilities
+   ================================================================ */
+
+.text-secondary {
+  color: var(--text-secondary);
+}
+
+.text-muted {
+  color: var(--text-muted);
+}
+
+
+/* ================================================================
+   Animations
+   ================================================================ */
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+
+/* ================================================================
+   Reduced motion
+   ================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

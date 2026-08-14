@@ -1,0 +1,315 @@
+.media-layout-grid--grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: var(--space-5);
+}
+
+.media-layout-grid--compact {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: var(--space-3);
+}
+
+/* ============================================================
+   Media Card
+   ============================================================ */
+
+.media-card {
+  position: relative;
+
+  display: flex;
+  min-width: 0;
+
+  overflow: hidden;
+
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+
+  cursor: pointer;
+
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.media-card:hover {
+  background: var(--surface-hover);
+
+  border-color: color-mix(
+    in srgb,
+    var(--accent) 40%,
+    var(--border)
+  );
+
+  box-shadow:
+    var(--shadow-md),
+    0 0 0 1px color-mix(
+      in srgb,
+      var(--accent) 8%,
+      transparent
+    );
+}
+
+.media-card:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ============================================================
+   Grid
+   ============================================================ */
+
+.media-card--grid {
+  flex-direction: column;
+}
+
+/* ============================================================
+   Cover
+   ============================================================ */
+
+.media-card__cover {
+  position: relative;
+
+  overflow: hidden;
+
+  background: var(--surface-raised);
+}
+
+.media-card--grid .media-card__cover {
+  aspect-ratio: 2 / 3;
+  width: 100%;
+}
+
+.media-card__image {
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+
+  transition:
+    filter 0.35s ease;
+}
+
+.media-card__cover::after {
+  content: "";
+
+  position: absolute;
+  inset: 0;
+
+  pointer-events: none;
+
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.18),
+    transparent 30%,
+    rgba(0, 0, 0, 0.08)
+  );
+}
+
+.media-card__missing-cover {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+  height: 100%;
+
+  color: var(--text-muted);
+  background: var(--surface-raised);
+
+  font-size: var(--font-size-small);
+}
+
+/* ============================================================
+   Status
+   ============================================================ */
+
+.media-card__status {
+  position: absolute;
+  z-index: 2;
+
+  top: var(--space-2);
+  left: var(--space-2);
+
+  max-width: calc(100% - var(--space-4));
+
+  padding: 4px 7px;
+
+  overflow: hidden;
+
+  color: var(--text);
+  background: rgba(0, 0, 0, 0.72);
+
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-sm);
+
+  font-size: 10px;
+  font-weight: var(--font-weight-semibold);
+  text-transform: capitalize;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  backdrop-filter: blur(8px);
+}
+
+/* ============================================================
+   Score
+   ============================================================ */
+
+.media-card__score {
+  position: absolute;
+  z-index: 2;
+
+  right: var(--space-2);
+  bottom: var(--space-2);
+
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+
+  padding: 4px 7px;
+
+  color: var(--text);
+  background: rgba(0, 0, 0, 0.72);
+
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-sm);
+
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+
+  backdrop-filter: blur(8px);
+}
+
+/* ============================================================
+   Body
+   ============================================================ */
+
+.media-card__body {
+  display: flex;
+  flex-direction: column;
+
+  min-width: 0;
+  padding: var(--space-3);
+}
+
+.media-card__main-info {
+  min-width: 0;
+}
+
+.media-card__title {
+  display: -webkit-box;
+
+  margin: 0;
+
+  overflow: hidden;
+
+  color: var(--text);
+
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.35;
+
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+/* ============================================================
+   Progress
+   ============================================================ */
+
+.media-card__progress {
+  margin-top: var(--space-3);
+}
+
+.media-card__progress-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-bottom: 5px;
+
+  color: var(--text-muted);
+
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+}
+
+.media-card__progress-label span:last-child {
+  color: var(--text-secondary);
+}
+
+.media-card__progress-track {
+  width: 100%;
+  height: 4px;
+
+  overflow: hidden;
+
+  background: var(--surface-raised);
+  border-radius: 999px;
+}
+
+.media-card__progress-bar {
+  height: 100%;
+
+  background: var(--accent);
+  border-radius: inherit;
+
+  transition: width 0.3s ease;
+}
+
+/* ============================================================
+   Compact Mode
+   ============================================================ */
+
+.media-card--compact {
+  flex-direction: row;
+
+  min-height: 92px;
+}
+
+.media-card--compact .media-card__cover {
+  width: 68px;
+  min-width: 68px;
+  height: 92px;
+}
+
+.media-card--compact .media-card__body {
+  justify-content: center;
+}
+
+.media-card--compact .media-card__progress {
+  margin-top: var(--space-2);
+}
+
+.media-card__compact-status {
+  align-self: flex-start;
+
+  margin-top: var(--space-2);
+
+  color: var(--accent);
+
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  text-transform: capitalize;
+}
+
+/* ============================================================
+   Responsive Grid
+   ============================================================ */
+
+@media (max-width: 1200px) {
+  .media-card--grid .media-card__body {
+    padding: var(--space-2) var(--space-3);
+  }
+}
+
+@media (max-width: 600px) {
+  .media-card--grid .media-card__title {
+    font-size: var(--font-size-small);
+  }
+}

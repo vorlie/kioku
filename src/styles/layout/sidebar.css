@@ -1,0 +1,107 @@
+/* ================================================================
+   Sidebar (Modernized Glass/Layered style)
+   ================================================================ */
+
+.sidebar {
+    flex: 0 0 var(--sidebar-width);
+    display: flex;
+    flex-direction: column;
+    width: var(--sidebar-width);
+    height: 100vh;
+    padding: var(--space-5) var(--space-4);
+    background: var(--surface);
+}
+
+.sidebar__brand {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: 0 var(--space-4) var(--space-6);
+}
+
+.sidebar__brand-logo {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.sidebar__brand-name {
+    font-size: var(--font-size-medium);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: -0.01em;
+    color: var(--text);
+    white-space: nowrap;
+}
+
+.sidebar__nav {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.sidebar__link {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: 42px;
+    padding: var(--space-2) var(--space-4);
+    color: var(--text-secondary);
+    text-decoration: none;
+    border-radius: var(--radius-lg);
+    transition:
+        color var(--duration-fast) var(--ease-default),
+        background-color var(--duration-fast) var(--ease-default),
+        transform var(--duration-fast) var(--ease-default);
+}
+
+.sidebar__link:hover {
+    color: var(--text);
+    background: var(--surface-hover);
+}
+
+.sidebar__link.active {
+    color: var(--background);
+    background: var(--accent);
+    font-weight: var(--font-weight-medium);
+    box-shadow: 0 4px 12px var(--accent-muted);
+}
+
+.sidebar__icon {
+    display: grid;
+    flex: 0 0 20px;
+    width: 20px;
+    height: 20px;
+    place-items: center;
+    stroke-width: 1.8;
+}
+
+.sidebar__label {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+@media (max-width: 720px) {
+    .sidebar {
+        flex-basis: 68px;
+        width: 68px;
+        padding: var(--space-4) var(--space-2);
+    }
+
+    .sidebar__brand,
+    .sidebar__label {
+        display: none;
+    }
+
+    .sidebar__link {
+        justify-content: center;
+        padding: var(--space-3);
+    }
+
+    .sidebar__icon {
+        flex-basis: 24px;
+        width: 24px;
+        height: 24px;
+    }
+}
