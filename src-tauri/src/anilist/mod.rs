@@ -1,6 +1,6 @@
 use crate::auth::AuthManager;
 use crate::error::{AppError, Result};
-use crate::models::{AiringSchedulePage, Media, MediaListEntry, Page, Viewer};
+use crate::models::{ActivityPage, ActivityUnion, AiringSchedulePage, Media, MediaListEntry, Page, Viewer};
 use reqwest::Client;
 use serde::Deserialize;
 use std::sync::Arc;
@@ -978,5 +978,136 @@ impl AniListClient {
         let variables = serde_json::json!({ "id": entry_id });
         let response: Response = self.execute_query(QUERY, Some(&variables)).await?;
         Ok(response.delete_media_list_entry.deleted)
+    }
+
+    pub async fn user_activities(&self, page: Option<i32>, per_page: Option<i32>) -> Result<ActivityPage> {
+        // First get the viewer ID
+        let viewer = self.viewer().await?;
+        let viewer_id = viewer.id;
+
+        const QUERY: &str = r#"
+            query($userId: Int, $page: Int, $perPage: Int) {
+                Page(page: $page, perPage: $perPage) {
+                    pageInfo {
+                        total
+                        perPage
+                        currentPage
+                        lastPage
+                        hasNextPage
+                    }
+                    activities(userId: $userId, sort: ID_DESC) {
+                        ... on TextActivity {
+                            id
+                            userId
+                            type
+                            replyCount
+                            text
+                            siteUrl
+                            isLocked
+                            isSubscribed
+                            likeCount
+                            isLiked
+                            isPinned
+                            createdAt
+                            user {
+                                id
+                                name
+                                avatar {
+                                    large
+                                    medium
+                                }
+                            }
+                        }
+                        ... on ListActivity {
+                            id
+                            userId
+                            type
+                            replyCount
+                            status
+                            progress
+                            isLocked
+                            isSubscribed
+                            likeCount
+                            isLiked
+                            isPinned
+                            siteUrl
+                            createdAt
+                            user {
+                                id
+                                name
+                                avatar {
+                                    large
+                                    medium
+                                }
+                            }
+                            media {
+                                id
+                                title {
+                                    romaji
+                                    english
+                                    native
+                                    userPreferred
+                                }
+                                coverImage {
+                                    large
+                                    medium
+                                    color
+                                }
+                                type
+                                format
+                            }
+                        }
+                        ... on MessageActivity {
+                            id
+                            recipientId
+                            messengerId
+                            type
+                            replyCount
+                            message
+                            siteUrl
+                            isLocked
+                            isSubscribed
+                            likeCount
+                            isLiked
+                            isPrivate
+                            createdAt
+                            recipient {
+                                id
+                                name
+                                avatar {
+                                    large
+                                    medium
+                                }
+                            }
+                            messenger {
+                                id
+                                name
+                                avatar {
+                                    large
+                                    medium
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        "#;
+
+        #[derive(Deserialize)]
+        struct Response {
+            #[serde(rename = "Page")]
+            page: ActivityPage,
+        }
+
+        let variables = serde_json::json!({
+            "userId": viewer_id,
+            "page": page.unwrap_or(1),
+            "perPage": per_page.unwrap_or(20)
+        });
+
+        eprintln!("Fetching activities for user ID: {}", viewer_id);
+        let response: Response = self.execute_query(QUERY, Some(&variables)).await?;
+        eprintln!("Fetched activities: {:?}", response.page);
+        Ok(response.page)
     }
 }

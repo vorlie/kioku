@@ -198,3 +198,94 @@ export interface Page<T> {
   pageInfo: PageInfo;
   media?: T[];
 }
+
+export interface BasicUser {
+  id: number;
+  name: string;
+  avatar?: Avatar;
+}
+
+export interface ActivityMedia {
+  id: number;
+  title: Title;
+  coverImage: CoverImage;
+  format?: string;
+  type: string;
+}
+
+export interface ActivityReply {
+  id: number;
+  userId: number;
+  activityId: number;
+  text?: string;
+  likeCount: number;
+  isLiked: boolean;
+  createdAt: number;
+  user?: BasicUser;
+  likes?: BasicUser[];
+}
+
+export interface TextActivity {
+  id: number;
+  userId: number;
+  type: string;
+  replyCount: number;
+  text?: string;
+  siteUrl?: string;
+  isLocked: boolean;
+  isSubscribed: boolean;
+  likeCount: number;
+  isLiked: boolean;
+  isPinned?: boolean;
+  createdAt: number;
+  user?: BasicUser;
+  replies?: ActivityReply[];
+  likes?: BasicUser[];
+}
+
+export interface ListActivity {
+  id: number;
+  userId: number;
+  type: string;
+  replyCount: number;
+  status?: string;
+  progress?: string;
+  isLocked: boolean;
+  isSubscribed: boolean;
+  likeCount: number;
+  isLiked: boolean;
+  isPinned?: boolean;
+  siteUrl?: string;
+  createdAt: number;
+  media?: ActivityMedia;
+  user?: BasicUser;
+  replies?: ActivityReply[];
+  likes?: BasicUser[];
+}
+
+export interface MessageActivity {
+  id: number;
+  recipientId?: number;
+  messengerId: number;
+  type: string;
+  replyCount: number;
+  message?: string;
+  siteUrl?: string;
+  isLocked: boolean;
+  isSubscribed: boolean;
+  likeCount: number;
+  isLiked: boolean;
+  isPrivate?: boolean;
+  createdAt: number;
+  recipient?: BasicUser;
+  messenger?: BasicUser;
+  replies?: ActivityReply[];
+  likes?: BasicUser[];
+}
+
+export type ActivityUnion = TextActivity | ListActivity | MessageActivity;
+
+export interface ActivityPage {
+  pageInfo: PageInfo;
+  activities?: ActivityUnion[];
+}

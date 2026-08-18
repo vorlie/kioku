@@ -1,6 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { Media, MediaListEntry, Page, Viewer } from "../types/anilist";
+import type { ActivityPage, Media, MediaListEntry, Page, Viewer } from "../types/anilist";
 
 type CacheEntry<T> = { value: T; expiresAt: number };
 const cache = new Map<string, CacheEntry<unknown>>();
@@ -12,6 +12,7 @@ const TTL = {
   media: 10 * 60_000,
   discovery: 10 * 60_000,
   search: 2 * 60_000,
+  activity: 3 * 60_000,
 };
 
 async function cached<T>(key: string, ttl: number, request: () => Promise<T>, force = false): Promise<T> {
@@ -117,3 +118,9 @@ function useDiscovery(kind: "trending" | "popular") {
 
 export const useTrendingAnime = () => useDiscovery("trending");
 export const usePopularAnime = () => useDiscovery("popular");
+
+export function useUserActivities(page: number = 1, perPage: number = 20) {
+  const key = `activities:${page}:${perPage}`;
+  const query = useCachedQuery(key, TTL.activity, () => invoke<ActivityPage>("get_user_activities", { page, perPage }));
+  return { activities: query.data, ...query };
+}

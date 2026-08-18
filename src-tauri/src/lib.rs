@@ -7,7 +7,7 @@ mod models;
 use anilist::AniListClient;
 use auth::AuthManager;
 use auth_server::AuthServer;
-use models::{Media, MediaListEntry, Page, Viewer, AiringSchedulePage};
+use models::{ActivityPage, Media, MediaListEntry, Page, Viewer, AiringSchedulePage};
 use std::sync::Mutex;
 
 // Global state for auth server
@@ -182,6 +182,16 @@ async fn popular_anime(
     Ok(client.popular_anime(page, per_page).await?)
 }
 
+#[tauri::command]
+async fn get_user_activities(
+    app: tauri::AppHandle,
+    page: Option<i32>,
+    per_page: Option<i32>,
+) -> Result<ActivityPage, error::AppError> {
+    let client = AniListClient::new(app);
+    Ok(client.user_activities(page, per_page).await?)
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -206,7 +216,8 @@ pub fn run() {
             delete_entry,
             trending_anime,
             fetch_airing_calendar,
-            popular_anime
+            popular_anime,
+            get_user_activities
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
