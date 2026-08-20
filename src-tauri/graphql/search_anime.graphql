@@ -1,0 +1,48 @@
+query ($search: String, $page: Int, $perPage: Int) {
+  Page(page: $page, perPage: $perPage) {
+    pageInfo {
+      total
+      perPage
+      currentPage
+      lastPage
+      hasNextPage
+    }
+    media(search: $search, type: ANIME) {
+      id
+      title {
+        romaji
+        english
+        native
+        userPreferred
+      }
+      coverImage {
+        extraLarge
+        large
+        medium
+        color
+      }
+      bannerImage
+      description
+      episodes
+      duration
+      status
+      genres
+      studios {
+        nodes {
+          id
+          name
+          isAnimationStudio
+        }
+      }
+      season
+      seasonYear
+      averageScore
+      meanScore
+      format
+      source
+      countryOfOrigin
+      isAdult
+      siteUrl
+    }
+  }
+}

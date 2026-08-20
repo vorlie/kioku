@@ -1,0 +1,105 @@
+query ($userId: Int, $page: Int, $perPage: Int) {
+  Page(page: $page, perPage: $perPage) {
+    pageInfo {
+      total
+      perPage
+      currentPage
+      lastPage
+      hasNextPage
+    }
+    activities(userId: $userId, sort: ID_DESC) {
+      ... on TextActivity {
+        id
+        userId
+        type
+        replyCount
+        text
+        siteUrl
+        isLocked
+        isSubscribed
+        likeCount
+        isLiked
+        isPinned
+        createdAt
+        user {
+          id
+          name
+          avatar {
+            large
+            medium
+          }
+        }
+      }
+      ... on ListActivity {
+        id
+        userId
+        type
+        replyCount
+        status
+        progress
+        isLocked
+        isSubscribed
+        likeCount
+        isLiked
+        isPinned
+        siteUrl
+        createdAt
+        user {
+          id
+          name
+          avatar {
+            large
+            medium
+          }
+        }
+        media {
+          id
+          title {
+            romaji
+            english
+            native
+            userPreferred
+          }
+          coverImage {
+            large
+            medium
+            color
+          }
+          type
+          format
+        }
+      }
+      ... on MessageActivity {
+        id
+        recipientId
+        messengerId
+        type
+        replyCount
+        message
+        siteUrl
+        isLocked
+        isSubscribed
+        likeCount
+        isLiked
+        isPrivate
+        createdAt
+        recipient {
+          id
+          name
+          avatar {
+            large
+            medium
+          }
+        }
+        messenger {
+          id
+          name
+          avatar {
+            large
+            medium
+          }
+        }
+      }
+    }
+  }
+}

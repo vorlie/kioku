@@ -1,0 +1,61 @@
+mutation (
+  $mediaId: Int
+  $status: MediaListStatus
+  $score: Float
+  $progress: Int
+  $notes: String
+) {
+  SaveMediaListEntry(
+    mediaId: $mediaId
+    status: $status
+    score: $score
+    progress: $progress
+    notes: $notes
+  ) {
+    id
+    mediaId
+    status
+    score
+    progress
+    repeat
+    priority
+    notes
+    startedAt {
+      year
+      month
+      day
+    }
+    completedAt {
+      year
+      month
+      day
+    }
+    updatedAt
+    createdAt
+    media {
+      id
+      title {
+        romaji
+        english
+        native
+        userPreferred
+      }
+      coverImage {
+        extraLarge
+        large
+        medium
+        color
+      }
+      episodes
+      chapters
+      volumes
+      status
+      genres
+      averageScore
+      meanScore
+      format
+      season
+      seasonYear
+    }
+  }
+}

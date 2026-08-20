@@ -1,0 +1,38 @@
+query ($startTime: Int, $endTime: Int, $page: Int) {
+  Page(page: $page, perPage: 50) {
+    pageInfo {
+      total
+      perPage
+      currentPage
+      lastPage
+      hasNextPage
+    }
+    airingSchedules(
+      airingAt_greater: $startTime
+      airingAt_lesser: $endTime
+      sort: TIME
+    ) {
+      id
+      airingAt
+      episode
+      mediaId
+      media {
+        id
+        type
+        title {
+          romaji
+          english
+          native
+          userPreferred
+        }
+        coverImage {
+          large
+          medium
+          color
+        }
+
+        format
+      }
+    }
+  }
+}

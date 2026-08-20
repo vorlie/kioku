@@ -1,0 +1,34 @@
+query ($userId: Int, $type: MediaType) {
+  MediaListCollection(userId: $userId, type: $type, sort: UPDATED_TIME_DESC) {
+    lists {
+      name
+      isCustomList
+      entries {
+        id
+        mediaId
+        status
+        score
+        progress
+        repeat
+        notes
+        updatedAt
+        media {
+          id
+          title {
+            romaji
+            english
+            userPreferred
+          }
+          coverImage {
+            large
+            medium
+          }
+          episodes
+          status
+          averageScore
+          format
+        }
+      }
+    }
+  }
+}

@@ -1,6 +1,6 @@
 use crate::auth::AuthManager;
 use crate::error::{AppError, Result};
-use crate::models::{ActivityPage, ActivityUnion, AiringSchedulePage, Media, MediaListEntry, Page, Viewer};
+use crate::models::{ActivityPage, AiringSchedulePage, Media, MediaListEntry, Page, Response, Viewer};
 use reqwest::Client;
 use serde::Deserialize;
 use std::sync::Arc;
@@ -75,93 +75,7 @@ impl AniListClient {
     }
 
     pub async fn viewer(&self) -> Result<Viewer> {
-        const QUERY: &str = r#"
-            query {
-                Viewer {
-                    id
-                    name
-                    avatar {
-                        large
-                        medium
-                    }
-                    bannerImage
-                    statistics {
-                        anime {
-                            count
-                            episodesWatched
-                            meanScore
-                            minutesWatched
-                            genres(limit: 12, sort: COUNT_DESC) { 
-                                genre 
-                                count 
-                                meanScore 
-                                minutesWatched 
-                            }
-                            studios(limit: 6, sort: COUNT_DESC) {
-                                studio { id name }
-                                count
-                                meanScore
-                            }
-                            scores(sort: ID) {
-                                score
-                                count
-                            }
-                        }
-                        manga {
-                            count
-                            chaptersRead
-                            volumesRead
-                            meanScore
-                            genres(limit: 12, sort: COUNT_DESC) { 
-                                genre 
-                                count 
-                                meanScore 
-                            }
-                        }
-                    }
-                    favourites { 
-                        anime(page: 1, perPage: 8) { 
-                            nodes { 
-                                id
-                                title {
-                                    english
-                                    romaji
-                                    native
-                                }
-                                coverImage {
-                                    large
-                                    medium
-                                }
-                                bannerImage
-                                format
-                                status
-                                seasonYear
-                                averageScore
-                            } 
-                        }
-                        manga(page: 1, perPage: 8) { 
-                            nodes { 
-                                id
-                                title {
-                                    english
-                                    romaji
-                                    native
-                                }
-                                coverImage {
-                                    large
-                                    medium
-                                }
-                                bannerImage
-                                format
-                                status
-                                seasonYear
-                                averageScore
-                            } 
-                        }
-                    }
-                }
-            }
-        "#;
+        const QUERY: &str = include_str!("../../graphql/viewer.graphql");
 
         #[derive(Deserialize)]
         struct Response {
@@ -171,61 +85,12 @@ impl AniListClient {
 
         eprintln!("Fetching viewer data");
         let response: Response = self.execute_query(QUERY, None).await?;
-        //eprintln!("Fetched viewer data: {:?}", response.viewer);
+        
         Ok(response.viewer)
     }
 
     pub async fn search_anime(&self, search: &str, page: Option<i32>, per_page: Option<i32>) -> Result<Page<Media>> {
-        const QUERY: &str = r#"
-            query($search: String, $page: Int, $perPage: Int) {
-                Page(page: $page, perPage: $perPage) {
-                    pageInfo {
-                        total
-                        perPage
-                        currentPage
-                        lastPage
-                        hasNextPage
-                    }
-                    media(search: $search, type: ANIME) {
-                        id
-                        title {
-                            romaji
-                            english
-                            native
-                            userPreferred
-                        }
-                        coverImage {
-                            extraLarge
-                            large
-                            medium
-                            color
-                        }
-                        bannerImage
-                        description
-                        episodes
-                        duration
-                        status
-                        genres
-                        studios {
-                            nodes {
-                                id
-                                name
-                                isAnimationStudio
-                            }
-                        }
-                        season
-                        seasonYear
-                        averageScore
-                        meanScore
-                        format
-                        source
-                        countryOfOrigin
-                        isAdult
-                        siteUrl
-                    }
-                }
-            }
-        "#;
+        const QUERY: &str = include_str!("../../graphql/search_anime.graphql");
 
         #[derive(Deserialize)]
         struct Response {
@@ -244,47 +109,7 @@ impl AniListClient {
     }
 
     pub async fn search_manga(&self, search: &str, page: Option<i32>, per_page: Option<i32>) -> Result<Page<Media>> {
-        const QUERY: &str = r#"
-            query($search: String, $page: Int, $perPage: Int) {
-                Page(page: $page, perPage: $perPage) {
-                    pageInfo {
-                        total
-                        perPage
-                        currentPage
-                        lastPage
-                        hasNextPage
-                    }
-                    media(search: $search, type: MANGA) {
-                        id
-                        title {
-                            romaji
-                            english
-                            native
-                            userPreferred
-                        }
-                        coverImage {
-                            extraLarge
-                            large
-                            medium
-                            color
-                        }
-                        bannerImage
-                        description
-                        chapters
-                        volumes
-                        status
-                        genres
-                        averageScore
-                        meanScore
-                        format
-                        source
-                        countryOfOrigin
-                        isAdult
-                        siteUrl
-                    }
-                }
-            }
-        "#;
+        const QUERY: &str = include_str!("../../graphql/search_manga.graphql");
 
         #[derive(Deserialize)]
         struct Response {
@@ -301,71 +126,9 @@ impl AniListClient {
         let response: Response = self.execute_query(QUERY, Some(&variables)).await?;
         Ok(response.page)
     }
-
+//include_str!("../../graphql/.graphql");
     pub async fn anime(&self, id: i32) -> Result<Media> {
-        const QUERY: &str = r#"
-            query($id: Int) {
-                Media(id: $id, type: ANIME) {
-                    id
-                    title {
-                        romaji
-                        english
-                        native
-                        userPreferred
-                    }
-                    coverImage {
-                        extraLarge
-                        large
-                        medium
-                        color
-                    }
-                    bannerImage
-                    description
-                    episodes
-                    duration
-                    status
-                    genres
-                    studios {
-                        nodes {
-                            id
-                            name
-                            isAnimationStudio
-                        }
-                    }
-                    season
-                    seasonYear
-                    averageScore
-                    meanScore
-                    format
-                    source
-                    countryOfOrigin
-                    isAdult
-                    siteUrl
-                    relations {
-                        edges {
-                            relationType
-                            node {
-                                id
-                                type
-                                title {
-                                    romaji
-                                    english
-                                    native
-                                    userPreferred
-                                }
-                                coverImage {
-                                    large
-                                    medium
-                                    color
-                                }
-                                status
-                                format
-                            }
-                        }
-                    }
-                }
-            }
-        "#;
+        const QUERY: &str = include_str!("../../graphql/anime.graphql");
 
         #[derive(Deserialize)]
         struct Response {
@@ -379,60 +142,7 @@ impl AniListClient {
     }
 
     pub async fn manga(&self, id: i32) -> Result<Media> {
-        const QUERY: &str = r#"
-            query($id: Int) {
-                Media(id: $id, type: MANGA) {
-                    id
-                    title {
-                        romaji
-                        english
-                        native
-                        userPreferred
-                    }
-                    coverImage {
-                        extraLarge
-                        large
-                        medium
-                        color
-                    }
-                    bannerImage
-                    description
-                    chapters
-                    volumes
-                    status
-                    genres
-                    averageScore
-                    meanScore
-                    format
-                    source
-                    countryOfOrigin
-                    isAdult
-                    siteUrl
-                    relations {
-                        edges {
-                            relationType
-                            node {
-                                id
-                                type
-                                title {
-                                    romaji
-                                    english
-                                    native
-                                    userPreferred
-                                }
-                                coverImage {
-                                    large
-                                    medium
-                                    color
-                                }
-                                status
-                                format
-                            }
-                        }
-                    }
-                }
-            }
-        "#;
+        const QUERY: &str = include_str!("../../graphql/manga.graphql");
 
         #[derive(Deserialize)]
         struct Response {
@@ -446,42 +156,7 @@ impl AniListClient {
     }
 
     pub async fn airing_schedule(&self, start_time: i64, end_time: i64, page: Option<i32>) -> Result<AiringSchedulePage> {
-        const QUERY: &str = r#"
-            query($startTime: Int, $endTime: Int, $page: Int) {
-                Page(page: $page, perPage: 50) {
-                    pageInfo {
-                        total
-                        perPage
-                        currentPage
-                        lastPage
-                        hasNextPage
-                    }
-                    airingSchedules(airingAt_greater: $startTime, airingAt_lesser: $endTime, sort: TIME) {
-                        id
-                        airingAt
-                        episode
-                        mediaId
-                        media {
-                            id
-                            type
-                            title {
-                                romaji
-                                english
-                                native
-                                userPreferred
-                            }
-                            coverImage {
-                                large
-                                medium
-                                color
-                            }
-                            
-                            format
-                        }
-                    }
-                }
-            }
-        "#;
+        const QUERY: &str = include_str!("../../graphql/airing_schedules.graphql");
 
         #[derive(Deserialize)]
         struct Response {
@@ -501,7 +176,6 @@ impl AniListClient {
     }
 
     pub async fn user_list(&self, media_type: &str, status: Option<&str>) -> Result<Vec<MediaListEntry>> {
-        // First get the viewer ID
         let viewer = self.viewer().await?;
         let viewer_id = viewer.id;
 
@@ -517,112 +191,11 @@ impl AniListClient {
         };
 
         // Use the correct AniList GraphQL structure with user ID
-        let query = if anilist_status.is_some() {
-            r#"
-                query($userId: Int, $type: MediaType, $status: MediaListStatus) {
-                    MediaListCollection(userId: $userId, type: $type, status: $status, sort: UPDATED_TIME_DESC) {
-                        lists {
-                            name
-                            isCustomList
-                            entries {
-                                id
-                                mediaId
-                                status
-                                score
-                                progress
-                                repeat
-                                notes
-                                updatedAt
-                                media {
-                                    id
-                                    title {
-                                        romaji
-                                        english
-                                        userPreferred
-                                    }
-                                    coverImage {
-                                        large
-                                        medium
-                                    }
-                                    episodes
-                                    status
-                                    averageScore
-                                    format
-                                }
-                            }
-                        }
-                    }
-                }
-            "#
+        let query:  &str  = if anilist_status.is_some() {
+            include_str!("../../graphql/user_list_1.graphql")
         } else {
-            r#"
-                query($userId: Int, $type: MediaType) {
-                    MediaListCollection(userId: $userId, type: $type, sort: UPDATED_TIME_DESC) {
-                        lists {
-                            name
-                            isCustomList
-                            entries {
-                                id
-                                mediaId
-                                status
-                                score
-                                progress
-                                repeat
-                                notes
-                                updatedAt
-                                media {
-                                    id
-                                    title {
-                                        romaji
-                                        english
-                                        userPreferred
-                                    }
-                                    coverImage {
-                                        large
-                                        medium
-                                    }
-                                    episodes
-                                    status
-                                    averageScore
-                                    format
-                                }
-                            }
-                        }
-                    }
-                }
-            "#
+            include_str!("../../graphql/user_list_2.graphql")
         };
-
-        #[derive(Deserialize)]
-        struct MediaListEntryWrapper {
-            id: i32,
-            #[serde(rename = "mediaId")]
-            media_id: i32,
-            status: Option<String>,
-            score: Option<f64>,
-            progress: Option<i32>,
-            repeat: Option<i32>,
-            notes: Option<String>,
-            #[serde(rename = "updatedAt")]
-            updated_at: Option<i64>,
-            media: Option<Media>,
-        }
-
-        #[derive(Deserialize)]
-        struct MediaList {
-            entries: Option<Vec<MediaListEntryWrapper>>,
-        }
-
-        #[derive(Deserialize)]
-        struct MediaListCollection {
-            lists: Option<Vec<MediaList>>,
-        }
-
-        #[derive(Deserialize)]
-        struct Response {
-            #[serde(rename = "MediaListCollection")]
-            media_list_collection: MediaListCollection,
-        }
 
         let mut variables = serde_json::json!({ 
             "userId": viewer_id,
@@ -657,92 +230,8 @@ impl AniListClient {
                 media: entry.media,
             })
             .collect();
-            
+
         Ok(all_entries)
-    }
-
-    pub async fn update_entry(
-        &self,
-        entry_id: i32,
-        status: Option<&str>,
-        score: Option<f64>,
-        progress: Option<i32>,
-        notes_val: Option<&str>,
-    ) -> Result<MediaListEntry> {
-        const QUERY: &str = r#"
-            mutation($id: Int, $status: MediaListStatus, $score: Float, $progress: Int, $notes: String) {
-                SaveMediaListEntry(id: $id, status: $status, score: $score, progress: $progress, notes: $notes) {
-                    id
-                    mediaId
-                    status
-                    score
-                    progress
-                    repeat
-                    priority
-                    notes
-                    startedAt {
-                        year
-                        month
-                        day
-                    }
-                    completedAt {
-                        year
-                        month
-                        day
-                    }
-                    updatedAt
-                    createdAt
-                    media {
-                        id
-                        title {
-                            romaji
-                            english
-                            native
-                            userPreferred
-                        }
-                        coverImage {
-                            extraLarge
-                            large
-                            medium
-                            color
-                        }
-                        episodes
-                        chapters
-                        volumes
-                        status
-                        genres
-                        averageScore
-                        meanScore
-                        format
-                        season
-                        seasonYear
-                    }
-                }
-            }
-        "#;
-
-        #[derive(Deserialize)]
-        struct Response {
-            #[serde(rename = "SaveMediaListEntry")]
-            save_media_list_entry: MediaListEntry,
-        }
-
-        let mut variables = serde_json::json!({ "id": entry_id });
-        if let Some(s) = status {
-            variables["status"] = serde_json::Value::String(s.to_string());
-        }
-        if let Some(s) = score {
-            variables["score"] = serde_json::json!(s);
-        }
-        if let Some(p) = progress {
-            variables["progress"] = serde_json::json!(p);
-        }
-        if let Some(n) = notes_val {
-            variables["notes"] = serde_json::Value::String(n.to_string());
-        }
-
-        let response: Response = self.execute_query(QUERY, Some(&variables)).await?;
-        Ok(response.save_media_list_entry)
     }
 
     pub async fn update_entry_by_media(
@@ -753,57 +242,7 @@ impl AniListClient {
         progress: Option<i32>,
         notes_val: Option<&str>,
     ) -> Result<MediaListEntry> {
-        const QUERY: &str = r#"
-            mutation($mediaId: Int, $status: MediaListStatus, $score: Float, $progress: Int, $notes: String) {
-                SaveMediaListEntry(mediaId: $mediaId, status: $status, score: $score, progress: $progress, notes: $notes) {
-                    id
-                    mediaId
-                    status
-                    score
-                    progress
-                    repeat
-                    priority
-                    notes
-                    startedAt {
-                        year
-                        month
-                        day
-                    }
-                    completedAt {
-                        year
-                        month
-                        day
-                    }
-                    updatedAt
-                    createdAt
-                    media {
-                        id
-                        title {
-                            romaji
-                            english
-                            native
-                            userPreferred
-                        }
-                        coverImage {
-                            extraLarge
-                            large
-                            medium
-                            color
-                        }
-                        episodes
-                        chapters
-                        volumes
-                        status
-                        genres
-                        averageScore
-                        meanScore
-                        format
-                        season
-                        seasonYear
-                    }
-                }
-            }
-        "#;
+        const QUERY: &str = include_str!("../../graphql/update_entry_by_media.graphql");
 
         #[derive(Deserialize)]
         struct Response {
@@ -830,52 +269,7 @@ impl AniListClient {
     }
 
     pub async fn trending_anime(&self, page: Option<i32>, per_page: Option<i32>) -> Result<Page<Media>> {
-        const QUERY: &str = r#"
-            query($page: Int, $perPage: Int) {
-                Page(page: $page, perPage: $perPage) {
-                    pageInfo {
-                        total
-                        perPage
-                        currentPage
-                        lastPage
-                        hasNextPage
-                    }
-                    media(type: ANIME, sort: TRENDING_DESC) {
-                        id
-                        title {
-                            romaji
-                            english
-                            native
-                            userPreferred
-                        }
-                        coverImage {
-                            extraLarge
-                            large
-                            medium
-                            color
-                        }
-                        bannerImage
-                        description
-                        episodes
-                        duration
-                        status
-                        genres
-                        averageScore
-                        meanScore
-                        format
-                        season
-                        seasonYear
-                        studios {
-                            nodes {
-                                id
-                                name
-                                isAnimationStudio
-                            }
-                        }
-                    }
-                }
-            }
-        "#;
+        const QUERY: &str = include_str!("../../graphql/trending_anime.graphql");
 
         #[derive(Deserialize)]
         struct Response {
@@ -893,52 +287,7 @@ impl AniListClient {
     }
 
     pub async fn popular_anime(&self, page: Option<i32>, per_page: Option<i32>) -> Result<Page<Media>> {
-        const QUERY: &str = r#"
-            query($page: Int, $perPage: Int) {
-                Page(page: $page, perPage: $perPage) {
-                    pageInfo {
-                        total
-                        perPage
-                        currentPage
-                        lastPage
-                        hasNextPage
-                    }
-                    media(type: ANIME, sort: POPULARITY_DESC) {
-                        id
-                        title {
-                            romaji
-                            english
-                            native
-                            userPreferred
-                        }
-                        coverImage {
-                            extraLarge
-                            large
-                            medium
-                            color
-                        }
-                        bannerImage
-                        description
-                        episodes
-                        duration
-                        status
-                        genres
-                        averageScore
-                        meanScore
-                        format
-                        season
-                        seasonYear
-                        studios {
-                            nodes {
-                                id
-                                name
-                                isAnimationStudio
-                            }
-                        }
-                    }
-                }
-            }
-        "#;
+        const QUERY: &str = include_str!("../../graphql/popular_anime.graphql");
 
         #[derive(Deserialize)]
         struct Response {
@@ -956,13 +305,7 @@ impl AniListClient {
     }
 
     pub async fn delete_entry(&self, entry_id: i32) -> Result<bool> {
-        const QUERY: &str = r#"
-            mutation($id: Int) {
-                DeleteMediaListEntry(id: $id) {
-                    deleted
-                }
-            }
-        "#;
+        const QUERY: &str = include_str!("../../graphql/delete_entry.graphql");
 
         #[derive(Deserialize)]
         struct DeleteResponse {
@@ -985,113 +328,7 @@ impl AniListClient {
         let viewer = self.viewer().await?;
         let viewer_id = viewer.id;
 
-        const QUERY: &str = r#"
-            query($userId: Int, $page: Int, $perPage: Int) {
-                Page(page: $page, perPage: $perPage) {
-                    pageInfo {
-                        total
-                        perPage
-                        currentPage
-                        lastPage
-                        hasNextPage
-                    }
-                    activities(userId: $userId, sort: ID_DESC) {
-                        ... on TextActivity {
-                            id
-                            userId
-                            type
-                            replyCount
-                            text
-                            siteUrl
-                            isLocked
-                            isSubscribed
-                            likeCount
-                            isLiked
-                            isPinned
-                            createdAt
-                            user {
-                                id
-                                name
-                                avatar {
-                                    large
-                                    medium
-                                }
-                            }
-                        }
-                        ... on ListActivity {
-                            id
-                            userId
-                            type
-                            replyCount
-                            status
-                            progress
-                            isLocked
-                            isSubscribed
-                            likeCount
-                            isLiked
-                            isPinned
-                            siteUrl
-                            createdAt
-                            user {
-                                id
-                                name
-                                avatar {
-                                    large
-                                    medium
-                                }
-                            }
-                            media {
-                                id
-                                title {
-                                    romaji
-                                    english
-                                    native
-                                    userPreferred
-                                }
-                                coverImage {
-                                    large
-                                    medium
-                                    color
-                                }
-                                type
-                                format
-                            }
-                        }
-                        ... on MessageActivity {
-                            id
-                            recipientId
-                            messengerId
-                            type
-                            replyCount
-                            message
-                            siteUrl
-                            isLocked
-                            isSubscribed
-                            likeCount
-                            isLiked
-                            isPrivate
-                            createdAt
-                            recipient {
-                                id
-                                name
-                                avatar {
-                                    large
-                                    medium
-                                }
-                            }
-                            messenger {
-                                id
-                                name
-                                avatar {
-                                    large
-                                    medium
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        "#;
+        const QUERY: &str = include_str!("../../graphql/user_activities.graphql");
 
         #[derive(Deserialize)]
         struct Response {

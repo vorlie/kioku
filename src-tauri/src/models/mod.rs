@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize, Deserializer};
-use std::fmt;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Title {
@@ -272,6 +271,12 @@ pub struct MediaList {
 #[allow(dead_code)]
 pub struct MediaListCollection {
     pub lists: Option<Vec<MediaList>>,
+}
+
+#[derive(Deserialize)]
+pub struct Response {
+#[serde(rename = "MediaListCollection")]
+    pub media_list_collection: MediaListCollection,
 }
 
 /* -------------------------------------------------------------

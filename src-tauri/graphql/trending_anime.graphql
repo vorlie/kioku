@@ -1,0 +1,44 @@
+query ($page: Int, $perPage: Int) {
+  Page(page: $page, perPage: $perPage) {
+    pageInfo {
+      total
+      perPage
+      currentPage
+      lastPage
+      hasNextPage
+    }
+    media(type: ANIME, sort: TRENDING_DESC) {
+      id
+      title {
+        romaji
+        english
+        native
+        userPreferred
+      }
+      coverImage {
+        extraLarge
+        large
+        medium
+        color
+      }
+      bannerImage
+      description
+      episodes
+      duration
+      status
+      genres
+      averageScore
+      meanScore
+      format
+      season
+      seasonYear
+      studios {
+        nodes {
+          id
+          name
+          isAnimationStudio
+        }
+      }
+    }
+  }
+}

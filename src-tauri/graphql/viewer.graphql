@@ -1,0 +1,88 @@
+query {
+  Viewer {
+    id
+    name
+    avatar {
+      large
+      medium
+    }
+    bannerImage
+    statistics {
+      anime {
+        count
+        episodesWatched
+        meanScore
+        minutesWatched
+        genres(limit: 12, sort: COUNT_DESC) {
+          genre
+          count
+          meanScore
+          minutesWatched
+        }
+        studios(limit: 6, sort: COUNT_DESC) {
+          studio {
+            id
+            name
+          }
+          count
+          meanScore
+        }
+        scores(sort: ID) {
+          score
+          count
+        }
+      }
+      manga {
+        count
+        chaptersRead
+        volumesRead
+        meanScore
+        genres(limit: 12, sort: COUNT_DESC) {
+          genre
+          count
+          meanScore
+        }
+      }
+    }
+    favourites {
+      anime(page: 1, perPage: 8) {
+        nodes {
+          id
+          title {
+            english
+            romaji
+            native
+          }
+          coverImage {
+            large
+            medium
+          }
+          bannerImage
+          format
+          status
+          seasonYear
+          averageScore
+        }
+      }
+      manga(page: 1, perPage: 8) {
+        nodes {
+          id
+          title {
+            english
+            romaji
+            native
+          }
+          coverImage {
+            large
+            medium
+          }
+          bannerImage
+          format
+          status
+          seasonYear
+          averageScore
+        }
+      }
+    }
+  }
+}
