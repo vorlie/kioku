@@ -2,7 +2,7 @@
 name = "kioku-for-anilist"
 version = "0.1.0"
 description = "A polished, modern desktop client for managing your AniList anime and manga libraries."
-authors = ["you"]
+authors = ["vorlie"]
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
