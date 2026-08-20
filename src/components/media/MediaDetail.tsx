@@ -44,6 +44,7 @@ export interface MediaDetailData {
     nodes?: {
       id: number;
       name: string;
+      isAnimationStudio?: boolean;
     }[];
   };
 
@@ -296,7 +297,7 @@ export default function MediaDetail<T extends MediaDetailData>({
               </span>
             ))}
           </div>
-          
+
           {/*
           {media.genres?.length > 0 && (
             <div className="media-detail__genres">
@@ -312,14 +313,37 @@ export default function MediaDetail<T extends MediaDetailData>({
           )}
           */}
 
-          {media.studios?.nodes?.length ? (
-            <div className="media-detail__studios">
-              <span>Studios:</span>{" "}
-              <span>
-                {media.studios.nodes.map((s) => s.name).join(", ")}
-              </span>
-            </div>
-          ) : null}
+          {media.studios?.nodes?.length ? (() => {
+            const uniqueNodes = Array.from(
+              new Map(media.studios.nodes.map((s) => [s.name, s])).values()
+            );
+
+            const animationStudios = uniqueNodes.filter((s) => s.isAnimationStudio);
+            const producers = uniqueNodes.filter((s) => !s.isAnimationStudio);
+
+            const hasSplit = animationStudios.length > 0;
+            const studioList = hasSplit ? animationStudios : uniqueNodes;
+
+            return (
+              <div className="media-detail__studios-group">
+                <div className="media-detail__studios">
+                  <span className="media-detail__label">
+                    {studioList.length > 1 ? "Studios:" : "Studio:"}
+                  </span>{" "}
+                  <span>{studioList.map((s) => s.name).join(", ")}</span>
+                </div>
+
+                {hasSplit && producers.length > 0 && (
+                  <div className="media-detail__studios">
+                    <span className="media-detail__label">
+                      {producers.length > 1 ? "Producers:" : "Producer:"}
+                    </span>{" "}
+                    <span>{producers.map((s) => s.name).join(", ")}</span>
+                  </div>
+                )}
+              </div>
+            );
+          })() : null}
 
           {aniPlayInstalled && mediaType === "anime" && (
             <OpenInAniPlay mediaId={media.id} />
