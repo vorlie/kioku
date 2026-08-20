@@ -144,17 +144,15 @@
 
     min-height: 26px;
 
-    padding: 0 var(--space-2);
-
-    border-radius: var(--radius-sm);
-
-    background: var(--surface);
-    border: 1px solid var(--border);
-
     color: var(--text-secondary);
 
     font-size: var(--font-size-xs);
     font-weight: var(--font-weight-medium);
+}
+
+.media-detail__meta > * + *::before {
+    content: "\2022";
+    margin-right: 8px;
 }
 
 .media-detail__score {
@@ -169,18 +167,12 @@
     margin-bottom: var(--space-4);
 }
 
-.media-detail__genre {
-    padding: 4px 9px;
-
-    border-radius: var(--radius-full);
-
-    background: var(--surface-hover);
-    border: 1px solid var(--border);
-
-    color: var(--text-secondary);
-
-    font-size: var(--font-size-xs);
-    font-weight: var(--font-weight-medium);
+.media-detail__genre-tag {
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  background: var(--surface);
+  color: var(--text-secondary);
+  font-size: var(--font-size-xs);
 }
 
 .media-detail__studios {

@@ -15,6 +15,9 @@ import {
 import MediaRelations from "./MediaRelations";
 import type { MediaRelationConnection } from "../../types/anilist";
 
+import { useAniPlayInstalled } from "../../hooks/useAniplay"
+import OpenInAniPlay from "../ui/OpenInAniplay";
+
 export interface MediaDetailData {
   id: number;
 
@@ -97,6 +100,7 @@ export default function MediaDetail<T extends MediaDetailData>({
   const [progress, setProgress] = useState(0);
   const [isExpanded, setIsExpanded] = useState(false);
   const [saved, setSaved] = useState(false);
+  const { aniPlayInstalled } = useAniPlayInstalled();
 
   /*
    * Keep hooks unconditional.
@@ -270,7 +274,6 @@ export default function MediaDetail<T extends MediaDetailData>({
           <h1 className="media-detail__title">
             {title}
           </h1>
-
           <div className="media-detail__meta">
             {media.averageScore != null && (
               <span className="media-detail__score">
@@ -287,8 +290,14 @@ export default function MediaDetail<T extends MediaDetailData>({
                 {item}
               </span>
             ))}
+            {media.genres?.map((genre) => (
+              <span className="media-detail__genre-tag" key={genre}>
+                {genre}
+              </span>
+            ))}
           </div>
-
+          
+          {/*
           {media.genres?.length > 0 && (
             <div className="media-detail__genres">
               {media.genres.map((genre) => (
@@ -301,18 +310,20 @@ export default function MediaDetail<T extends MediaDetailData>({
               ))}
             </div>
           )}
+          */}
 
           {media.studios?.nodes?.length ? (
             <div className="media-detail__studios">
-              <span>Studios</span>
-
-              {media.studios.nodes.map((studio) => (
-                <span key={studio.id}>
-                  {studio.name}
-                </span>
-              ))}
+              <span>Studios:</span>{" "}
+              <span>
+                {media.studios.nodes.map((s) => s.name).join(", ")}
+              </span>
             </div>
           ) : null}
+
+          {aniPlayInstalled && mediaType === "anime" && (
+            <OpenInAniPlay mediaId={media.id} />
+          )}
         </div>
       </section>
 

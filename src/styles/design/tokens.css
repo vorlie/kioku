@@ -188,3 +188,7 @@ button:disabled {
     transition-duration: 0.01ms !important;
   }
 }
+
+.margin-top{
+  margin-top: var(--space-3);
+}

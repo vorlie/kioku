@@ -192,6 +192,20 @@ async fn get_user_activities(
     Ok(client.user_activities(page, per_page).await?)
 }
 
+#[cfg(target_os = "windows")]
+#[tauri::command]
+fn is_aniplay_installed() -> bool {
+    use winreg::enums::*;
+    use winreg::RegKey;
+
+    let hkcu = RegKey::predef(HKEY_CURRENT_USER);
+
+    hkcu.open_subkey(
+        r"Software\Classes\aniplay\shell\open\command"
+    )
+    .is_ok()
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -217,7 +231,8 @@ pub fn run() {
             trending_anime,
             fetch_airing_calendar,
             popular_anime,
-            get_user_activities
+            get_user_activities,
+            is_aniplay_installed
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
