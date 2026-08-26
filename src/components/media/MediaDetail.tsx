@@ -15,7 +15,6 @@ import {
 import MediaRelations from "./MediaRelations";
 import type { MediaRelationConnection } from "../../types/anilist";
 
-import { useAniPlayInstalled } from "../../hooks/useAniplay"
 import OpenInAniList from "../ui/OpenInAniList";
 
 export interface MediaDetailData {
@@ -101,7 +100,6 @@ export default function MediaDetail<T extends MediaDetailData>({
   const [progress, setProgress] = useState(0);
   const [isExpanded, setIsExpanded] = useState(false);
   const [saved, setSaved] = useState(false);
-  const { aniPlayInstalled } = useAniPlayInstalled();
 
   /*
    * Keep hooks unconditional.
