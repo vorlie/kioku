@@ -11,6 +11,7 @@ import Calendar from "../pages/Calendar";
 import Statistics from "../pages/Statistics";
 import Activity from "../pages/Activity";
 import Settings from "../pages/Settings";
+import Playback from "../pages/Playback";
 
 const router = createBrowserRouter([
   {
@@ -61,6 +62,10 @@ const router = createBrowserRouter([
         path: "settings",
         element: <Settings />,
       },
+      {
+        path: "playback",
+        element: <Playback />,
+      }
     ],
   },
 ]);

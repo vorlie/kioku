@@ -33,3 +33,8 @@ tiny_http = "0.12"
 rand = "0.8"
 url = "2"
 winreg = "0.56.0"
+ani_lib = {
+    git = "https://github.com/vorlie/ani-cli-rs",
+    rev = "a430c6e6a203dcf9fac8817e132bffcbd4bac11f",
+    package = "ani-cli-rs",
+}

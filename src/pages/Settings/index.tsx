@@ -1,11 +1,6 @@
 import { useState } from "react";
-import {
-  Check,
-  Palette,
-  UserRound,
-  Info,
-  Settings2,
-} from "lucide-react";
+import { Check, Palette, UserRound, Info, Settings2, ExternalLink } from "lucide-react";
+import { open } from "@tauri-apps/plugin-shell";
 
 import { useAuth } from "../../hooks/useAuth";
 import LoginModal from "../../components/ui/LoginModal";
@@ -55,13 +50,9 @@ const THEMES: { id: Theme; label: string; description: string }[] = [
 function getSavedTheme(): Theme {
   const theme = localStorage.getItem("theme");
 
-  const validThemes: Theme[] = THEMES.map(
-    (theme) => theme.id
-  );
+  const validThemes: Theme[] = THEMES.map((theme) => theme.id);
 
-  return validThemes.includes(theme as Theme)
-    ? (theme as Theme)
-    : "espresso";
+  return validThemes.includes(theme as Theme) ? (theme as Theme) : "espresso";
 }
 
 export default function Settings() {
@@ -95,9 +86,7 @@ export default function Settings() {
             </div>
 
             <div>
-              <h2 className="settings-section__title">
-                Appearance
-              </h2>
+              <h2 className="settings-section__title">Appearance</h2>
 
               <p className="settings-section__description">
                 Customize how Kioku looks.
@@ -108,9 +97,7 @@ export default function Settings() {
           <div className="settings-panel">
             <div className="settings-row">
               <div className="settings-row__content">
-                <span className="settings-row__title">
-                  Theme
-                </span>
+                <span className="settings-row__title">Theme</span>
 
                 <span className="settings-row__description">
                   Choose your preferred color scheme.
@@ -123,13 +110,9 @@ export default function Settings() {
                 <button
                   key={item.id}
                   className={`settings-theme ${
-                    theme === item.id
-                      ? "settings-theme--active"
-                      : ""
+                    theme === item.id ? "settings-theme--active" : ""
                   }`}
-                  onClick={() =>
-                    handleThemeChange(item.id)
-                  }
+                  onClick={() => handleThemeChange(item.id)}
                 >
                   <div className="settings-theme__preview">
                     <span />
@@ -138,9 +121,7 @@ export default function Settings() {
                   </div>
 
                   <div className="settings-theme__info">
-                    <span className="settings-theme__name">
-                      {item.label}
-                    </span>
+                    <span className="settings-theme__name">{item.label}</span>
 
                     <span className="settings-theme__description">
                       {item.description}
@@ -148,10 +129,7 @@ export default function Settings() {
                   </div>
 
                   {theme === item.id && (
-                    <Check
-                      size={16}
-                      className="settings-theme__check"
-                    />
+                    <Check size={16} className="settings-theme__check" />
                   )}
                 </button>
               ))}
@@ -167,9 +145,7 @@ export default function Settings() {
             </div>
 
             <div>
-              <h2 className="settings-section__title">
-                AniList Account
-              </h2>
+              <h2 className="settings-section__title">AniList Account</h2>
 
               <p className="settings-section__description">
                 Manage your AniList connection.
@@ -180,19 +156,9 @@ export default function Settings() {
           <div className="settings-panel">
             <div className="settings-account">
               <div className="settings-account__status">
-                <span
-                  className={`settings-account__indicator ${
-                    isAuthenticated
-                      ? "settings-account__indicator--connected"
-                      : ""
-                  }`}
-                />
-
-                <div>
+                <div className="settings-row__content">
                   <span className="settings-row__title">
-                    {isAuthenticated
-                      ? "AniList connected"
-                      : "Not connected"}
+                    {isAuthenticated ? "AniList connected" : "Not connected"}
                   </span>
 
                   <span className="settings-row__description">
@@ -204,10 +170,7 @@ export default function Settings() {
               </div>
 
               {isAuthenticated ? (
-                <button
-                  onClick={logout}
-                  className="button-secondary"
-                >
+                <button onClick={logout} className="button-secondary">
                   Sign Out
                 </button>
               ) : (
@@ -228,12 +191,8 @@ export default function Settings() {
             <div className="settings-section__icon">
               <Info size={18} />
             </div>
-
             <div>
-              <h2 className="settings-section__title">
-                About
-              </h2>
-
+              <h2 className="settings-section__title">About</h2>
               <p className="settings-section__description">
                 Information about Kioku.
               </p>
@@ -242,33 +201,49 @@ export default function Settings() {
 
           <div className="settings-panel">
             <div className="settings-about">
-              <div>
-                <span className="settings-about__name">
-                  Kioku for AniList
-                </span>
+              <div className="settings-about__identity">
+                <div>
+                  <span className="settings-about__name">Kioku</span>
+                  <span className="settings-about__description">
+                    A desktop client for managing your AniList library.
+                  </span>
+                </div>
 
-                <span className="settings-about__description">
-                  A polished desktop client for managing your
-                  AniList library.
-                </span>
+                <span className="settings-about__version">v0.1.0</span>
               </div>
 
-              <span className="settings-about__version">
-                v0.1.0
-              </span>
-            </div>
+              <div className="settings-about__links">
+                <button
+                  className="settings-about__link"
+                  onClick={() => open("https://github.com/vorlie/kioku")}
+                >
+                  <ExternalLink size={14} /> 
+                  GitHub
+                </button>
 
-            <div className="settings-about__footer">
-              Built with Tauri 2 · React · Rust
+                <button
+                  className="settings-about__link"
+                  onClick={() => open("https://anilist.co")}
+                >
+                  <ExternalLink size={14} /> 
+                  AniList
+                </button>
+              </div>
+
+              <div className="settings-about__footer">
+                <span>Built with Tauri 2 · React · TypeScript · Rust</span>
+                <span>
+                  Kioku is an independent third-party application and is not
+                  affiliated with AniList.
+                </span>
+              </div>
             </div>
           </div>
         </section>
       </div>
 
       {showLoginModal && (
-        <LoginModal
-          onClose={() => setShowLoginModal(false)}
-        />
+        <LoginModal onClose={() => setShowLoginModal(false)} />
       )}
     </div>
   );

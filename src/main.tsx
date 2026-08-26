@@ -4,8 +4,6 @@ import App from "./app/App";
 import { AuthProvider } from "./hooks/useAuth";
 import "./index.css";
 
-
-
 const savedTheme = localStorage.getItem("theme");
 if (savedTheme === "catppuccin" 
   || savedTheme === "espresso" 

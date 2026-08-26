@@ -14,7 +14,7 @@
       {
         "title": "Kioku for AniList",
         "decorations": false,
-        "transparent": true,
+        "transparent": false,
         "width": 1597,
         "height": 867,
         "minWidth": 1470,

@@ -16,7 +16,7 @@ import MediaRelations from "./MediaRelations";
 import type { MediaRelationConnection } from "../../types/anilist";
 
 import { useAniPlayInstalled } from "../../hooks/useAniplay"
-import OpenInAniPlay from "../ui/OpenInAniplay";
+import OpenInAniList from "../ui/OpenInAniList";
 
 export interface MediaDetailData {
   id: number;
@@ -345,9 +345,10 @@ export default function MediaDetail<T extends MediaDetailData>({
             );
           })() : null}
 
-          {aniPlayInstalled && mediaType === "anime" && (
-            <OpenInAniPlay mediaId={media.id} />
-          )}
+          <OpenInAniList
+            mediaId={media.id}
+            mediaType={mediaType}
+          />
         </div>
       </section>
 

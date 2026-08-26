@@ -330,19 +330,22 @@
 
 .settings-about {
     display: flex;
+    flex-direction: column;
+}
+
+.settings-about__identity {
+    display: flex;
     align-items: center;
     justify-content: space-between;
-
     gap: var(--space-5);
-
     padding: var(--space-5);
 }
 
-.settings-about>div {
+.settings-about__identity > div {
     display: flex;
     flex-direction: column;
-
     gap: 3px;
+    min-width: 0;
 }
 
 .settings-about__name {
@@ -358,27 +361,85 @@
 
 .settings-about__version {
     flex-shrink: 0;
-
     padding: 4px 8px;
-
     color: var(--text-muted);
     background: var(--surface-raised);
-
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
-
     font-family: var(--font-mono);
     font-size: var(--font-size-xs);
 }
 
-.settings-about__footer {
-    padding: var(--space-3) var(--space-5);
 
+.settings-about__links {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 0 var(--space-5) var(--space-5);
+}
+
+.settings-about__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+
+    padding: 7px 11px;
+
+    color: var(--text-secondary);
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+
+    font: inherit;
+    font-size: var(--font-size-small);
+    font-weight: var(--font-weight-medium);
+
+    cursor: pointer;
+
+    transition:
+        color 0.15s ease,
+        background-color 0.15s ease,
+        border-color 0.15s ease,
+        transform 0.15s ease;
+}
+
+.settings-about__link svg {
+    flex-shrink: 0;
+    color: var(--text-muted);
+    transition: color 0.15s ease;
+}
+
+.settings-about__link:hover {
+    color: var(--text);
+    background: var(--surface-hover);
+    border-color: var(--border-strong);
+}
+
+.settings-about__link:hover svg {
+    color: var(--accent);
+}
+
+.settings-about__link:active {
+    transform: translateY(1px);
+}
+
+.settings-about__link:focus-visible {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.12);
+}
+
+
+/* Footer */
+
+.settings-about__footer {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: var(--space-3) var(--space-5);
     color: var(--text-muted);
     background: var(--surface-raised);
-
     border-top: 1px solid var(--border);
-
     font-size: var(--font-size-xs);
 }
 
@@ -408,5 +469,13 @@
 
     .settings-theme-grid {
         grid-template-columns: 1fr;
+    }
+
+    .settings-about__links {
+        width: 100%;
+    }
+
+    .settings-about__link {
+        flex: 1;
     }
 }

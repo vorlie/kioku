@@ -7,6 +7,7 @@ import {
   Compass,
   History,
   Home,
+  Play,
   Search,
   Settings,
   type LucideIcon,
@@ -22,6 +23,7 @@ const navItems: { path: string; label: string; icon: LucideIcon }[] = [
   { path: "/statistics", label: "Statistics", icon: BarChart3 },
   { path: "/activity", label: "Activity", icon: History },
   { path: "/settings", label: "Settings", icon: Settings },
+  { path: "/playback", label: "PlaybackTest", icon: Play}
 ];
 
 export default function Sidebar() {

@@ -3,6 +3,7 @@ mod auth;
 mod auth_server;
 mod error;
 mod models;
+mod playback;
 
 use anilist::AniListClient;
 use auth::AuthManager;
@@ -212,6 +213,7 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_shell::init())
         .manage(AuthServerState(Mutex::new(None)))
+        .manage(playback::PlaybackState::new())
         .invoke_handler(tauri::generate_handler![
             greet,
             start_auth_server,
@@ -232,7 +234,12 @@ pub fn run() {
             fetch_airing_calendar,
             popular_anime,
             get_user_activities,
-            is_aniplay_installed
+            is_aniplay_installed,
+            playback::playback_search,
+            playback::playback_episodes,
+            playback::playback_streams,
+            playback::playback_prepare_stream,
+            playback::playback_stop,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
