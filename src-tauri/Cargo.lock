@@ -44,7 +44,7 @@ dependencies = [
 [[package]]
 name = "ani-cli-rs"
 version = "0.9.4"
-source = "git+https://github.com/vorlie/ani-cli-rs?rev=a430c6e6a203dcf9fac8817e132bffcbd4bac11f#a430c6e6a203dcf9fac8817e132bffcbd4bac11f"
+source = "git+https://github.com/vorlie/ani-cli-rs.git?rev=a430c6e6a203dcf9fac8817e132bffcbd4bac11f#a430c6e6a203dcf9fac8817e132bffcbd4bac11f"
 dependencies = [
  "base64 0.22.1",
  "bytes",
