@@ -365,7 +365,7 @@
   font-size: 13px;
   font-weight: 600;
   text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: wrap;
 }
 
 .playback__result-main span {
