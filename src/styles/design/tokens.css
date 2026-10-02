@@ -28,7 +28,7 @@
      Typography
      ============================================================ */
 
-  --font-sans: "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+  --font-sans: "Noto Sans", sans-serif;
 
   --font-size-display: 2.5rem;
   --font-size-heading: 1.75rem;
