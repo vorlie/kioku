@@ -2,7 +2,7 @@
   "name": "kioku-for-anilist",
   "description": "A polished, modern desktop client for managing your AniList anime and manga libraries.",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
