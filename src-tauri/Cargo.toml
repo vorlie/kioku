@@ -1,6 +1,6 @@
 [package]
 name = "kioku-for-anilist"
-version = "0.1.0"
+version = "0.2.0"
 description = "A polished, modern desktop client for managing your AniList anime and manga libraries."
 authors = ["vorlie"]
 edition = "2021"
