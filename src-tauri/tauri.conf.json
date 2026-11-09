@@ -13,7 +13,7 @@
     "windows": [
       {
         "title": "Kioku for AniList",
-        "decorations": false,
+        "decorations": true,
         "transparent": false,
         "width": 1597,
         "height": 867,
