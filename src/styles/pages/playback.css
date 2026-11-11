@@ -573,6 +573,13 @@
   object-fit: contain;
 }
 
+.playback__keyboard-hint {
+  margin: 0;
+  padding: 8px 14px;
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
 .playback__video-placeholder {
   position: absolute;
   inset: 0;

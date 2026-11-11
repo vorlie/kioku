@@ -41,6 +41,58 @@ export default function Playback() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!selectedStream) return;
+
+    function handlePlayerKeyDown(event: KeyboardEvent) {
+      const target = event.target;
+      if (
+        target instanceof HTMLElement &&
+        (target.isContentEditable ||
+          target.closest("input, textarea, select, button, [role='button']"))
+      ) {
+        return;
+      }
+
+      const video = videoRef.current;
+      if (!video) return;
+
+      switch (event.key) {
+        case "ArrowLeft":
+          event.preventDefault();
+          video.currentTime = Math.max(0, video.currentTime - 5);
+          break;
+        case "ArrowRight":
+          event.preventDefault();
+          video.currentTime = Math.min(
+            Number.isFinite(video.duration) ? video.duration : Infinity,
+            video.currentTime + 5,
+          );
+          break;
+        case "ArrowUp":
+          event.preventDefault();
+          video.muted = false;
+          video.volume = Math.min(1, video.volume + 0.05);
+          break;
+        case "ArrowDown":
+          event.preventDefault();
+          video.volume = Math.max(0, video.volume - 0.05);
+          break;
+        case " ":
+          event.preventDefault();
+          if (video.paused) {
+            void video.play().catch((error: unknown) => setError(String(error)));
+          } else {
+            video.pause();
+          }
+          break;
+      }
+    }
+
+    window.addEventListener("keydown", handlePlayerKeyDown);
+    return () => window.removeEventListener("keydown", handlePlayerKeyDown);
+  }, [selectedStream]);
+
   async function handleSearch() {
     if (!query.trim()) return;
 
@@ -102,6 +154,8 @@ export default function Playback() {
       );
 
       setStreams(result);
+
+      await handlePlay(result[0])
     } catch (error) {
       setError(String(error));
     } finally {
@@ -144,8 +198,21 @@ export default function Playback() {
         });
 
         hls.on(Hls.Events.ERROR, (_, data) => {
-          if (data.fatal) {
-            setError(`HLS error: ${data.details}`);
+          if (!data.fatal) return;
+
+          switch (data.type) {
+            case Hls.ErrorTypes.NETWORK_ERROR:
+              hls.startLoad();
+              break;
+
+            case Hls.ErrorTypes.MEDIA_ERROR:
+              hls.recoverMediaError();
+              break;
+
+            default:
+              hls.destroy();
+              hlsRef.current = null;
+              setError(`Fatal HLS error: ${data.details}`);
           }
         });
       } else {
@@ -405,6 +472,11 @@ export default function Playback() {
             </div>
           )}
         </div>
+        {selectedStream && (
+          <p className="playback__keyboard-hint">
+            Keyboard: ←/→ seek 5 seconds · ↑/↓ adjust volume · Space play/pause
+          </p>
+        )}
       </section>
     </main>
   );
