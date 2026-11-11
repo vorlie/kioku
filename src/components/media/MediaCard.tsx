@@ -60,6 +60,16 @@ export default function MediaCard({
     navigate(`/${mediaType}/${id}`);
   };
 
+  const handleWatchNow = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    navigate("/playback", {
+      state: {
+        query: title,
+        autoplay: true,
+      },
+    });
+  };
+
   return (
     <article
       className={`media-card media-card--${viewMode}`}
@@ -86,6 +96,16 @@ export default function MediaCard({
             No cover
           </div>
         )}
+
+        <button
+          type="button"
+          className="media-card__watch-button"
+          onClick={handleWatchNow}
+          aria-label={`Watch ${title} now`}
+          title={`Watch ${title} now`}
+        >
+          <span aria-hidden="true">▶</span>
+        </button>
 
         {viewMode === "grid" && status && (
           <span className="media-card__status">

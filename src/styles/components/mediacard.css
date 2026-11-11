@@ -185,6 +185,36 @@
   backdrop-filter: blur(8px);
 }
 
+.media-card__watch-button {
+  position: absolute;
+  z-index: 2;
+
+  top: var(--space-2);
+  right: var(--space-2);
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 28px;
+  height: 28px;
+
+  color: var(--text);
+  background: rgba(0, 0, 0, 0.72);
+
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+
+  font-size: 12px;
+  cursor: pointer;
+
+  backdrop-filter: blur(8px);
+}
+
+.media-card__watch-button:hover {
+  background: rgba(0, 0, 0, 0.86);
+}
+
 /* ============================================================
    Body
    ============================================================ */

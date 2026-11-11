@@ -8,6 +8,7 @@ import {
   ChevronDown,
   ChevronUp,
   Minus,
+  Play,
   Plus,
   Star,
 } from "lucide-react";
@@ -213,6 +214,15 @@ export default function MediaDetail<T extends MediaDetailData>({
     }, 1800);
   };
 
+  const handleWatchNow = () => {
+    navigate("/playback", {
+      state: {
+        query: title,
+        autoplay: true,
+      },
+    });
+  };
+
   /*
    * ------------------------------------------------------------
    * Render
@@ -343,10 +353,18 @@ export default function MediaDetail<T extends MediaDetailData>({
             );
           })() : null}
 
-          <OpenInAniList
-            mediaId={media.id}
-            mediaType={mediaType}
-          />
+          <div className="media-detail__actions">
+            <button
+              type="button"
+              className="button-primary media-detail__action-button"
+              onClick={handleWatchNow}
+            >
+              <Play size={16} />
+              Watch now
+            </button>
+
+            <OpenInAniList mediaId={media.id} mediaType={mediaType} />
+          </div>
         </div>
       </section>
 

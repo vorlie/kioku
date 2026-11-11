@@ -1,5 +1,9 @@
 import { useEffect, useRef, useState } from "react";
+import { Play } from "lucide-react";
+import { useLocation } from "react-router-dom";
 import Hls from "hls.js";
+
+import PageHeader from "../../components/layout/PageHeader";
 
 import {
   getPlaybackEpisodes,
@@ -16,6 +20,7 @@ import type {
 } from "../../types/playback";
 
 export default function Playback() {
+  const location = useLocation();
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
 
@@ -33,6 +38,22 @@ export default function Playback() {
   const [loading, setLoading] = useState(false);
   const [playing, setPlaying] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const initialQuery =
+    typeof location.state === "object" &&
+    location.state !== null &&
+    "query" in location.state
+      ? String(location.state.query)
+      : "";
+
+  useEffect(() => {
+    if (!initialQuery) {
+      return;
+    }
+
+    setQuery(initialQuery);
+    void handleSearch(initialQuery, translation);
+  }, [initialQuery, translation]);
 
   useEffect(() => {
     return () => {
@@ -93,14 +114,16 @@ export default function Playback() {
     return () => window.removeEventListener("keydown", handlePlayerKeyDown);
   }, [selectedStream]);
 
-  async function handleSearch() {
-    if (!query.trim()) return;
+  async function handleSearch(nextQuery = query, nextTranslation = translation) {
+    const trimmedQuery = nextQuery.trim();
+
+    if (!trimmedQuery) return;
 
     setLoading(true);
     setError(null);
 
     try {
-      const result = await searchPlayback(query.trim(), translation);
+      const result = await searchPlayback(trimmedQuery, nextTranslation);
 
       setResults(result);
       setSelectedShow(null);
@@ -155,7 +178,9 @@ export default function Playback() {
 
       setStreams(result);
 
-      await handlePlay(result[0])
+      if (result[0]) {
+        await handlePlay(result[0]);
+      }
     } catch (error) {
       setError(String(error));
     } finally {
@@ -234,28 +259,20 @@ export default function Playback() {
 
   return (
     <main className="playback">
-      <header className="playback__header">
-        <div className="playback__header-content">
-          <span className="playback__eyebrow">MEDIA PLAYER</span>
-
-          <h1>Playback</h1>
-
-          <p>Search for an anime, select an episode, and start watching.</p>
-        </div>
-
-        <div className="playback__notice">
-          <span className="playback__notice-icon">!</span>
-
-          <div>
-            <strong>Session-based playback</strong>
-
-            <span>
-              Leaving this page will stop playback and clear your current
-              selection.
+      <PageHeader
+        icon={<Play size={20} />}
+        title="Playback"
+        subtitle="Search for an anime, select an episode, and start watching."
+        meta={selectedShow ? "Ready" : "Idle"}
+        actions={
+          <div className="playback__session">
+            <span className="playback__session-badge">Session</span>
+            <span className="playback__session-copy">
+              Playback stops when you leave this page.
             </span>
           </div>
-        </div>
-      </header>
+        }
+      />
 
       {error && (
         <section className="playback__error">
@@ -267,217 +284,214 @@ export default function Playback() {
           </div>
         </section>
       )}
-      <section className="playback__workspace">
-        <section className="playback__search">
-          <div className="playback__search-input">
-            <span aria-hidden="true">⌕</span>
 
-            <input
-              type="text"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  void handleSearch();
-                }
-              }}
-              placeholder="Search anime..."
-            />
+      <div className="playback__content">
+        <aside className="playback__panel playback__panel--sidebar">
+          <div className="playback__toolbar">
+            <div className="playback__search-input">
+              <span aria-hidden="true">⌕</span>
+
+              <input
+                type="text"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    void handleSearch();
+                  }
+                }}
+                placeholder="Search anime..."
+              />
+            </div>
+
+            <select
+              value={translation}
+              onChange={(event) =>
+                setTranslation(event.target.value as TranslationType)
+              }
+            >
+              <option value="sub">Sub</option>
+              <option value="dub">Dub</option>
+            </select>
+
+            <button
+              type="button"
+              onClick={() => void handleSearch()}
+              disabled={loading || !query.trim()}
+            >
+              {loading ? "Searching…" : "Search"}
+            </button>
           </div>
 
-          <select
-            value={translation}
-            onChange={(event) =>
-              setTranslation(event.target.value as TranslationType)
-            }
-          >
-            <option value="sub">Subtitles</option>
-            <option value="dub">Dub</option>
-          </select>
-
-          <button
-            type="button"
-            onClick={() => void handleSearch()}
-            disabled={loading || !query.trim()}
-          >
-            {loading ? "Searching…" : "Search"}
-          </button>
-        </section>
-
-        {results.length > 0 && (
-          <section className="playback__section">
-            <div className="playback__section-header">
-              <div>
-                <span className="playback__label">SEARCH RESULTS</span>
-
-                <h2>Choose an anime</h2>
+          {selectedShow && (
+            <section className="playback__episode-picker">
+              <div className="playback__episode-info">
+                <span className="playback__label">SELECT EPISODE</span>
+                <h2>{selectedShow.name}</h2>
+                <p>Choose an episode to find available streams.</p>
               </div>
 
-              <span className="playback__section-count">{results.length}</span>
-            </div>
-
-            <div className="playback__results">
-              {results.map((show) => (
-                <button
-                  key={show.id}
-                  type="button"
-                  className={
-                    selectedShow?.id === show.id
-                      ? "playback__result playback__result--active"
-                      : "playback__result"
-                  }
-                  onClick={() => void handleSelectShow(show)}
+              <div className="playback__episode-controls">
+                <select
+                  value={selectedEpisode}
+                  onChange={(event) => setSelectedEpisode(event.target.value)}
                 >
-                  <div className="playback__result-main">
-                    <strong>{show.name}</strong>
+                  {episodes.map((episode) => (
+                    <option key={episode} value={episode}>
+                      Episode {episode}
+                    </option>
+                  ))}
+                </select>
 
-                    <span>{show.provider}</span>
-                  </div>
-
-                  {show.episodes > 0 && (
-                    <span className="playback__result-count">
-                      {show.episodes}
-                    </span>
-                  )}
+                <button
+                  type="button"
+                  onClick={() => void handleLoadStreams()}
+                  disabled={loading || !selectedEpisode}
+                >
+                  {loading ? "Loading…" : "Find streams"}
                 </button>
-              ))}
-            </div>
-          </section>
-        )}
+              </div>
+            </section>
+          )}
 
-        {selectedShow && (
-          <section className="playback__episode">
-            <div className="playback__episode-info">
-              <span className="playback__label">SELECT EPISODE</span>
+          {results.length > 0 && (
+            <section className="playback__section">
+              <div className="playback__section-header">
+                <div>
+                  <span className="playback__label">SEARCH RESULTS</span>
+                  <h2>Choose an anime</h2>
+                </div>
 
-              <h2>{selectedShow.name}</h2>
-
-              <p>Choose an episode to find available streams.</p>
-            </div>
-
-            <div className="playback__episode-controls">
-              <select
-                value={selectedEpisode}
-                onChange={(event) => setSelectedEpisode(event.target.value)}
-              >
-                {episodes.map((episode) => (
-                  <option key={episode} value={episode}>
-                    Episode {episode}
-                  </option>
-                ))}
-              </select>
-
-              <button
-                type="button"
-                onClick={() => void handleLoadStreams()}
-                disabled={loading || !selectedEpisode}
-              >
-                {loading ? "Loading…" : "Find streams"}
-              </button>
-            </div>
-          </section>
-        )}
-
-        {streams.length > 0 && (
-          <section className="playback__section">
-            <div className="playback__section-header">
-              <div>
-                <span className="playback__label">AVAILABLE SOURCES</span>
-
-                <h2>Choose a stream</h2>
+                <span className="playback__section-count">{results.length}</span>
               </div>
 
-              <span className="playback__section-count">{streams.length}</span>
-            </div>
+              <div className="playback__results">
+                {results.map((show) => (
+                  <button
+                    key={show.id}
+                    type="button"
+                    className={
+                      selectedShow?.id === show.id
+                        ? "playback__result playback__result--active"
+                        : "playback__result"
+                    }
+                    onClick={() => void handleSelectShow(show)}
+                  >
+                    <div className="playback__result-main">
+                      <strong>{show.name}</strong>
+                      <span>{show.provider}</span>
+                    </div>
 
-            <div className="playback__streams">
-              {streams.map((stream, index) => (
-                <button
-                  key={`${stream.url}-${index}`}
-                  type="button"
-                  className={
-                    selectedStream?.url === stream.url
-                      ? "playback__stream playback__stream--active"
-                      : "playback__stream"
-                  }
-                  onClick={() => void handlePlay(stream)}
-                >
-                  <div className="playback__stream-quality">
-                    <strong>{stream.resolution}</strong>
-
-                    <span>{stream.provider}</span>
-                  </div>
-
-                  <div className="playback__stream-meta">
-                    <span>{stream.hls ? "HLS" : "Direct"}</span>
-
-                    {stream.subtitles.length > 0 && (
-                      <span>CC {stream.subtitles.length}</span>
+                    {show.episodes > 0 && (
+                      <span className="playback__result-count">{show.episodes}</span>
                     )}
-                  </div>
-                </button>
-              ))}
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {streams.length > 0 && (
+            <section className="playback__section">
+              <div className="playback__section-header">
+                <div>
+                  <span className="playback__label">AVAILABLE SOURCES</span>
+                  <h2>Choose a stream</h2>
+                </div>
+
+                <span className="playback__section-count">{streams.length}</span>
+              </div>
+
+              <div className="playback__streams">
+                {streams.map((stream, index) => (
+                  <button
+                    key={`${stream.url}-${index}`}
+                    type="button"
+                    className={
+                      selectedStream?.url === stream.url
+                        ? "playback__stream playback__stream--active"
+                        : "playback__stream"
+                    }
+                    onClick={() => void handlePlay(stream)}
+                  >
+                    <div className="playback__stream-quality">
+                      <strong>{stream.resolution}</strong>
+                      <span>{stream.provider}</span>
+                    </div>
+
+                    <div className="playback__stream-meta">
+                      <span>{stream.hls ? "HLS" : "Direct"}</span>
+
+                      {stream.subtitles.length > 0 && (
+                        <span>CC {stream.subtitles.length}</span>
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {!loading && !results.length && !selectedShow && !streams.length && (
+            <div className="playback__empty-state">
+              <div className="playback__empty-state-icon">⌕</div>
+              <strong>Search for a title</strong>
+              <span>Find an anime to load episodes and source options.</span>
             </div>
-          </section>
-        )}
-      </section>
-      <section className="playback__player">
-        <div className="playback__player-header">
-          <div className="playback__now-playing">
-            <span className="playback__label">NOW PLAYING</span>
+          )}
+        </aside>
 
-            <strong>{selectedShow?.name ?? "Nothing playing"}</strong>
+        <section className="playback__panel playback__panel--player">
+          <div className="playback__player-header">
+            <div className="playback__now-playing">
+              <span className="playback__label">NOW PLAYING</span>
+              <strong>{selectedShow?.name ?? "Nothing playing"}</strong>
 
-            {selectedEpisode && (
-              <span className="playback__episode">
-                Episode {selectedEpisode}
-              </span>
+              {selectedEpisode && (
+                <span className="playback__now-playing-episode">
+                  Episode {selectedEpisode}
+                </span>
+              )}
+            </div>
+
+            {selectedStream && (
+              <div className="playback__player-badges">
+                <span>{selectedStream.resolution}</span>
+                <span>{selectedStream.provider}</span>
+                <span>{selectedStream.hls ? "HLS" : "Direct"}</span>
+                {playing && <span className="playback__player-status">Playing</span>}
+              </div>
+            )}
+          </div>
+
+          <div className="playback__video">
+            <video
+              ref={videoRef}
+              controls
+              playsInline
+              preload="metadata"
+              onPlay={handleVideoPlay}
+              onPause={handleVideoPause}
+            />
+
+            {!selectedStream && (
+              <div className="playback__video-placeholder">
+                <div className="playback__video-placeholder-icon">▶</div>
+                <strong>Nothing playing</strong>
+                <span>
+                  Search for an anime and select a stream to start playback.
+                </span>
+              </div>
             )}
           </div>
 
           {selectedStream && (
-            <div className="playback__player-badges">
-              <span>{selectedStream.resolution}</span>
-
-              <span>{selectedStream.provider}</span>
-
-              <span>{selectedStream.hls ? "HLS" : "Direct"}</span>
-
-              {playing && (
-                <span className="playback__player-status">Playing</span>
-              )}
-            </div>
+            <p className="playback__keyboard-hint">
+              Keyboard: ←/→ seek 5 seconds · ↑/↓ adjust volume · Space play/pause
+            </p>
           )}
-        </div>
-
-        <div className="playback__video">
-          <video
-            ref={videoRef}
-            controls
-            playsInline
-            preload="metadata"
-            onPlay={handleVideoPlay}
-            onPause={handleVideoPause}
-          />
-
-          {!selectedStream && (
-            <div className="playback__video-placeholder">
-              <div className="playback__video-placeholder-icon">▶</div>
-
-              <strong>Nothing playing</strong>
-
-              <span>
-                Search for an anime and select a stream to start playback.
-              </span>
-            </div>
-          )}
-        </div>
-        {selectedStream && (
-          <p className="playback__keyboard-hint">
-            Keyboard: ←/→ seek 5 seconds · ↑/↓ adjust volume · Space play/pause
-          </p>
-        )}
-      </section>
+        </section>
+      </div>
     </main>
   );
 }

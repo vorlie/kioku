@@ -15,7 +15,7 @@ export default function OpenInAniList({
   };
 
   return (
-    <button onClick={handleOpen} className="button-primary margin-top">
+    <button onClick={handleOpen} className="button-primary media-detail__action-button">
       <ExternalLink size={16} />
       Open on AniList
     </button>
