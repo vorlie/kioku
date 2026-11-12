@@ -530,9 +530,33 @@
 
 .playback__keyboard-hint {
   margin: 0;
-  padding: 12px 14px 14px;
+  padding: 12px 14px 0;
   color: var(--text-muted);
   font-size: 11px;
+}
+
+.playback__sync-status {
+  padding: 12px 14px 14px;
+}
+
+.playback__sync-status span {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  padding: 6px 9px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.playback__sync-status--linked {
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface-raised));
+  color: var(--accent);
+}
+
+.playback__sync-status--manual {
+  background: color-mix(in srgb, var(--warning) 10%, var(--surface-raised));
+  color: var(--text-secondary);
 }
 
 @media (max-width: 980px) {

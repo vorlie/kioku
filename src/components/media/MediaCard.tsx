@@ -66,6 +66,8 @@ export default function MediaCard({
       state: {
         query: title,
         autoplay: true,
+        mediaId: mediaData.id,
+        mediaType,
       },
     });
   };

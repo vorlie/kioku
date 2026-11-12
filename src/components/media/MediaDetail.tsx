@@ -219,6 +219,8 @@ export default function MediaDetail<T extends MediaDetailData>({
       state: {
         query: title,
         autoplay: true,
+        mediaId: media.id,
+        mediaType,
       },
     });
   };

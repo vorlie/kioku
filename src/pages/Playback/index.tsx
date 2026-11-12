@@ -4,6 +4,7 @@ import { useLocation } from "react-router-dom";
 import Hls from "hls.js";
 
 import PageHeader from "../../components/layout/PageHeader";
+import { useUpdateEntry } from "../../hooks/useAniList";
 
 import {
   getPlaybackEpisodes,
@@ -23,6 +24,7 @@ export default function Playback() {
   const location = useLocation();
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
+  const { updateEntry } = useUpdateEntry();
 
   const [query, setQuery] = useState("");
   const [translation, setTranslation] = useState<TranslationType>("sub");
@@ -34,6 +36,7 @@ export default function Playback() {
   const [selectedShow, setSelectedShow] = useState<SearchResult | null>(null);
   const [selectedEpisode, setSelectedEpisode] = useState("");
   const [selectedStream, setSelectedStream] = useState<StreamLink | null>(null);
+  const completionSyncRef = useRef<string | null>(null);
 
   const [loading, setLoading] = useState(false);
   const [playing, setPlaying] = useState(false);
@@ -45,6 +48,23 @@ export default function Playback() {
     "query" in location.state
       ? String(location.state.query)
       : "";
+
+  const linkedMediaId =
+    typeof location.state === "object" &&
+    location.state !== null &&
+    "mediaId" in location.state
+      ? Number(location.state.mediaId)
+      : null;
+
+  const linkedMediaType =
+    typeof location.state === "object" &&
+    location.state !== null &&
+    "mediaType" in location.state
+      ? String(location.state.mediaType)
+      : null;
+
+  const hasAniListLink =
+    Number.isFinite(linkedMediaId) && linkedMediaId !== null && linkedMediaId > 0;
 
   useEffect(() => {
     if (!initialQuery) {
@@ -138,6 +158,7 @@ export default function Playback() {
   }
 
   async function handleSelectShow(show: SearchResult) {
+    completionSyncRef.current = null;
     setSelectedShow(show);
     setEpisodes([]);
     setStreams([]);
@@ -158,6 +179,23 @@ export default function Playback() {
       setError(String(error));
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function syncEpisodeProgress(nextEpisode: string | number) {
+    if (!hasAniListLink || linkedMediaId === null) return;
+
+    const numericEpisode = Number(nextEpisode);
+    if (!Number.isFinite(numericEpisode) || numericEpisode <= 0) return;
+
+    try {
+      await updateEntry({
+        mediaId: linkedMediaId,
+        status: "CURRENT",
+        progress: numericEpisode,
+      });
+    } catch (reason) {
+      console.error("AniList progress sync failed", reason);
     }
   }
 
@@ -196,6 +234,7 @@ export default function Playback() {
       return;
     }
 
+    completionSyncRef.current = null;
     setError(null);
     setSelectedStream(stream);
     setPlaying(false);
@@ -256,6 +295,25 @@ export default function Playback() {
   function handleVideoPause() {
     setPlaying(false);
   }
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !selectedEpisode || !selectedStream) return;
+
+    const handleTimeUpdate = () => {
+      const duration = Number(video.duration);
+      const currentTime = Number(video.currentTime);
+      const progress = duration > 0 ? currentTime / duration : 0;
+
+      if (progress >= 0.75 && completionSyncRef.current !== selectedEpisode) {
+        completionSyncRef.current = selectedEpisode;
+        void syncEpisodeProgress(selectedEpisode);
+      }
+    };
+
+    video.addEventListener("timeupdate", handleTimeUpdate);
+    return () => video.removeEventListener("timeupdate", handleTimeUpdate);
+  }, [selectedEpisode, selectedStream]);
 
   return (
     <main className="playback">
@@ -472,6 +530,12 @@ export default function Playback() {
               preload="metadata"
               onPlay={handleVideoPlay}
               onPause={handleVideoPause}
+              onEnded={() => {
+                if (selectedEpisode && completionSyncRef.current !== selectedEpisode) {
+                  completionSyncRef.current = selectedEpisode;
+                  void syncEpisodeProgress(selectedEpisode);
+                }
+              }}
             />
 
             {!selectedStream && (
@@ -490,6 +554,18 @@ export default function Playback() {
               Keyboard: ←/→ seek 5 seconds · ↑/↓ adjust volume · Space play/pause
             </p>
           )}
+
+          <div className="playback__sync-status">
+            {hasAniListLink && linkedMediaId ? (
+              <span className="playback__sync-status--linked">
+                AniList sync active for this {linkedMediaType ?? "title"}. Progress updates at 75% watched or on completion.
+              </span>
+            ) : (
+              <span className="playback__sync-status--manual">
+                Manual search: no AniList ID is available, so AniList progress sync is unavailable.
+              </span>
+            )}
+          </div>
         </section>
       </div>
     </main>
