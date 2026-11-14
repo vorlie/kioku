@@ -1,0 +1,96 @@
+name: Tauri cross-platform smoke
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  frontend-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type-check frontend
+        run: npx tsc --noEmit
+
+      - name: Build frontend bundle
+        run: npm run build
+
+  rust-checks:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rustfmt check
+        run: cargo fmt --all --check --manifest-path src-tauri/Cargo.toml
+
+      - name: Clippy checks
+        run: cargo clippy --all-targets --all-features --manifest-path src-tauri/Cargo.toml -- -D warnings
+
+      - name: Rust tests
+        run: cargo test --manifest-path src-tauri/Cargo.toml
+
+  linux-release-smoke:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Tauri app in release mode
+        run: cargo build --release --features tauri/custom-protocol --manifest-path src-tauri/Cargo.toml
+
+      - name: Verify release binary is not in dev mode
+        run: |
+          set -e
+          grep -R "cargo:dev=false" src-tauri/target/release/build -n | head -n 20
+
+  windows-release-smoke:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Tauri app in release mode
+        run: cargo build --release --features tauri/custom-protocol --manifest-path src-tauri/Cargo.toml
