@@ -1,4 +1,4 @@
-use serde::{Deserialize, Serialize, Deserializer};
+use serde::{Deserialize, Deserializer, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Title {
@@ -119,7 +119,6 @@ pub struct AiringSchedule {
     pub media: RelatedMediaNode, // Reuses the lightweight node model
 }
 
-
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct RelatedMediaNode {
     pub id: i32,
@@ -178,8 +177,8 @@ pub struct UserStatistics {
 }
 
 /* -------------------------------------------------------------
-   UPDATED EXTENDED STATS FIELDS
-   ------------------------------------------------------------- */
+UPDATED EXTENDED STATS FIELDS
+------------------------------------------------------------- */
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AnimeStatistics {
@@ -238,8 +237,8 @@ pub struct UserScoreStatistic {
 }
 
 /* -------------------------------------------------------------
-   CORE PAGE GENERICS
-   ------------------------------------------------------------- */
+CORE PAGE GENERICS
+------------------------------------------------------------- */
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PageInfo {
@@ -275,13 +274,13 @@ pub struct MediaListCollection {
 
 #[derive(Deserialize)]
 pub struct Response {
-#[serde(rename = "MediaListCollection")]
+    #[serde(rename = "MediaListCollection")]
     pub media_list_collection: MediaListCollection,
 }
 
 /* -------------------------------------------------------------
-   ACTIVITY MODELS
-   ------------------------------------------------------------- */
+ACTIVITY MODELS
+------------------------------------------------------------- */
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ActivityWrapper {
@@ -327,9 +326,9 @@ pub struct ActivityWrapper {
 #[derive(Debug, Clone, Serialize)]
 #[serde(untagged)]
 pub enum ActivityUnion {
-    TextActivity(TextActivity),
-    ListActivity(ListActivity),
-    MessageActivity(MessageActivity),
+    Text(TextActivity),
+    List(ListActivity),
+    Message(MessageActivity),
 }
 
 impl<'de> Deserialize<'de> for ActivityUnion {
@@ -338,9 +337,9 @@ impl<'de> Deserialize<'de> for ActivityUnion {
         D: Deserializer<'de>,
     {
         let wrapper = ActivityWrapper::deserialize(deserializer)?;
-        
+
         match wrapper.r#type.as_str() {
-            "TEXT" => Ok(ActivityUnion::TextActivity(TextActivity {
+            "TEXT" => Ok(ActivityUnion::Text(TextActivity {
                 id: wrapper.id,
                 user_id: wrapper.user_id.unwrap_or(0),
                 r#type: wrapper.r#type,
@@ -357,7 +356,7 @@ impl<'de> Deserialize<'de> for ActivityUnion {
                 replies: wrapper.replies,
                 likes: wrapper.likes,
             })),
-            "ANIME_LIST" | "MANGA_LIST" => Ok(ActivityUnion::ListActivity(ListActivity {
+            "ANIME_LIST" | "MANGA_LIST" => Ok(ActivityUnion::List(ListActivity {
                 id: wrapper.id,
                 user_id: wrapper.user_id.unwrap_or(0),
                 r#type: wrapper.r#type,
@@ -376,7 +375,7 @@ impl<'de> Deserialize<'de> for ActivityUnion {
                 replies: wrapper.replies,
                 likes: wrapper.likes,
             })),
-            "MESSAGE" => Ok(ActivityUnion::MessageActivity(MessageActivity {
+            "MESSAGE" => Ok(ActivityUnion::Message(MessageActivity {
                 id: wrapper.id,
                 recipient_id: wrapper.recipient_id,
                 messenger_id: wrapper.messenger_id.unwrap_or(0),
@@ -395,7 +394,10 @@ impl<'de> Deserialize<'de> for ActivityUnion {
                 replies: wrapper.replies,
                 likes: wrapper.likes,
             })),
-            _ => Err(serde::de::Error::custom(format!("Unknown activity type: {}", wrapper.r#type))),
+            _ => Err(serde::de::Error::custom(format!(
+                "Unknown activity type: {}",
+                wrapper.r#type
+            ))),
         }
     }
 }

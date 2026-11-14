@@ -36,11 +36,13 @@ impl AuthServer {
 
         eprintln!("Attempting to start auth server on port {}", CALLBACK_PORT);
 
-        let server = Server::http(&format!("127.0.0.1:{}", CALLBACK_PORT))
-            .map_err(|e| {
-                eprintln!("Failed to start server: {}", e);
-                format!("Failed to start server on port {}: {}. Port may already be in use.", CALLBACK_PORT, e)
-            })?;
+        let server = Server::http(format!("127.0.0.1:{}", CALLBACK_PORT)).map_err(|e| {
+            eprintln!("Failed to start server: {}", e);
+            format!(
+                "Failed to start server on port {}: {}. Port may already be in use.",
+                CALLBACK_PORT, e
+            )
+        })?;
 
         eprintln!("Server started successfully");
 
@@ -179,16 +181,22 @@ impl AuthServer {
 </html>"#;
                         let response = Response::from_string(html)
                             .with_status_code(StatusCode(200))
-                            .with_header(tiny_http::Header::from_bytes(
-                                &b"Content-Type"[..],
-                                &b"text/html; charset=utf-8"[..],
-                            ).unwrap());
+                            .with_header(
+                                tiny_http::Header::from_bytes(
+                                    &b"Content-Type"[..],
+                                    &b"text/html; charset=utf-8"[..],
+                                )
+                                .unwrap(),
+                            );
                         let _ = request.respond(response);
                     } else if method == &tiny_http::Method::Post && url == "/anilist/token" {
                         let mut body = String::new();
                         if let Err(error) = request.as_reader().read_to_string(&mut body) {
                             eprintln!("Failed to read OAuth callback: {}", error);
-                            let _ = request.respond(Response::from_string("Invalid callback").with_status_code(StatusCode(400)));
+                            let _ = request.respond(
+                                Response::from_string("Invalid callback")
+                                    .with_status_code(StatusCode(400)),
+                            );
                             continue;
                         }
 
@@ -197,18 +205,21 @@ impl AuthServer {
                         if let Some(token) = access_token {
                             eprintln!("Token extracted successfully");
                             *token_clone.lock().unwrap() = Some(token);
-                            
+
                             let _ = request.respond(Response::from_string("Sign-in successful"));
                             eprintln!("Success response sent");
                             break;
                         } else {
                             eprintln!("Failed to parse token from hash");
-                            let _ = request.respond(Response::from_string("Invalid OAuth callback").with_status_code(StatusCode(400)));
+                            let _ = request.respond(
+                                Response::from_string("Invalid OAuth callback")
+                                    .with_status_code(StatusCode(400)),
+                            );
                         }
                     } else {
                         // 404 for other routes
-                        let response = Response::from_string("Not Found")
-                            .with_status_code(StatusCode(404));
+                        let response =
+                            Response::from_string("Not Found").with_status_code(StatusCode(404));
                         let _ = request.respond(response);
                     }
                 }
@@ -222,7 +233,9 @@ impl AuthServer {
 
     fn parse_token_from_hash(hash: &str, expected_state: &str) -> Option<String> {
         let params: std::collections::HashMap<String, String> =
-            url::form_urlencoded::parse(hash.as_bytes()).into_owned().collect();
+            url::form_urlencoded::parse(hash.as_bytes())
+                .into_owned()
+                .collect();
 
         // Verify state
         if params.get("state") != Some(&expected_state.to_string()) {

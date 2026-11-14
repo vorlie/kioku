@@ -1,6 +1,8 @@
 use crate::auth::AuthManager;
 use crate::error::{AppError, Result};
-use crate::models::{ActivityPage, AiringSchedulePage, Media, MediaListEntry, Page, Response, Viewer};
+use crate::models::{
+    ActivityPage, AiringSchedulePage, Media, MediaListEntry, Page, Response, Viewer,
+};
 use reqwest::Client;
 use serde::Deserialize;
 use std::sync::Arc;
@@ -31,7 +33,8 @@ impl AniListClient {
         query: &str,
         variables: Option<&serde_json::Value>,
     ) -> Result<T> {
-        let mut request = self.client
+        let mut request = self
+            .client
             .post(ANILIST_API_URL)
             .header("Content-Type", "application/json")
             .header("Accept", "application/json")
@@ -45,33 +48,31 @@ impl AniListClient {
         }
 
         let response = request.send().await?;
-        
+
         // Debug logging
         let status = response.status();
         eprintln!("AniList API request status: {}", status);
-        
+
         if !status.is_success() {
-            let error_text = response.text().await.unwrap_or_else(|_| "Unable to read error".to_string());
+            let error_text = response
+                .text()
+                .await
+                .unwrap_or_else(|_| "Unable to read error".to_string());
             eprintln!("AniList API error response: {}", error_text);
             return Err(AppError::AniList(format!(
                 "API request failed with status: {} - {}",
-                status,
-                error_text
+                status, error_text
             )));
         }
 
         let response_json: serde_json::Value = response.json().await?;
-        
+
         if let Some(errors) = response_json.get("errors") {
             eprintln!("GraphQL errors: {}", errors);
-            return Err(AppError::AniList(format!(
-                "GraphQL errors: {}",
-                errors
-            )));
+            return Err(AppError::AniList(format!("GraphQL errors: {}", errors)));
         }
 
-        serde_json::from_value(response_json["data"].clone())
-            .map_err(|e| AppError::Serialization(e))
+        serde_json::from_value(response_json["data"].clone()).map_err(AppError::Serialization)
     }
 
     pub async fn viewer(&self) -> Result<Viewer> {
@@ -85,11 +86,16 @@ impl AniListClient {
 
         eprintln!("Fetching viewer data");
         let response: Response = self.execute_query(QUERY, None).await?;
-        
+
         Ok(response.viewer)
     }
 
-    pub async fn search_anime(&self, search: &str, page: Option<i32>, per_page: Option<i32>) -> Result<Page<Media>> {
+    pub async fn search_anime(
+        &self,
+        search: &str,
+        page: Option<i32>,
+        per_page: Option<i32>,
+    ) -> Result<Page<Media>> {
         const QUERY: &str = include_str!("../../graphql/search_anime.graphql");
 
         #[derive(Deserialize)]
@@ -108,7 +114,12 @@ impl AniListClient {
         Ok(response.page)
     }
 
-    pub async fn search_manga(&self, search: &str, page: Option<i32>, per_page: Option<i32>) -> Result<Page<Media>> {
+    pub async fn search_manga(
+        &self,
+        search: &str,
+        page: Option<i32>,
+        per_page: Option<i32>,
+    ) -> Result<Page<Media>> {
         const QUERY: &str = include_str!("../../graphql/search_manga.graphql");
 
         #[derive(Deserialize)]
@@ -126,7 +137,7 @@ impl AniListClient {
         let response: Response = self.execute_query(QUERY, Some(&variables)).await?;
         Ok(response.page)
     }
-//include_str!("../../graphql/.graphql");
+    //include_str!("../../graphql/.graphql");
     pub async fn anime(&self, id: i32) -> Result<Media> {
         const QUERY: &str = include_str!("../../graphql/anime.graphql");
 
@@ -155,7 +166,12 @@ impl AniListClient {
         Ok(response.media)
     }
 
-    pub async fn airing_schedule(&self, start_time: i64, end_time: i64, page: Option<i32>) -> Result<AiringSchedulePage> {
+    pub async fn airing_schedule(
+        &self,
+        start_time: i64,
+        end_time: i64,
+        page: Option<i32>,
+    ) -> Result<AiringSchedulePage> {
         const QUERY: &str = include_str!("../../graphql/airing_schedules.graphql");
 
         #[derive(Deserialize)]
@@ -175,7 +191,11 @@ impl AniListClient {
         Ok(response.page)
     }
 
-    pub async fn user_list(&self, media_type: &str, status: Option<&str>) -> Result<Vec<MediaListEntry>> {
+    pub async fn user_list(
+        &self,
+        media_type: &str,
+        status: Option<&str>,
+    ) -> Result<Vec<MediaListEntry>> {
         let viewer = self.viewer().await?;
         let viewer_id = viewer.id;
 
@@ -191,15 +211,15 @@ impl AniListClient {
         };
 
         // Use the correct AniList GraphQL structure with user ID
-        let query:  &str  = if anilist_status.is_some() {
+        let query: &str = if anilist_status.is_some() {
             include_str!("../../graphql/user_list_1.graphql")
         } else {
             include_str!("../../graphql/user_list_2.graphql")
         };
 
-        let mut variables = serde_json::json!({ 
+        let mut variables = serde_json::json!({
             "userId": viewer_id,
-            "type": media_type 
+            "type": media_type
         });
         if let Some(s) = anilist_status {
             variables["status"] = serde_json::json!(s);
@@ -207,9 +227,11 @@ impl AniListClient {
 
         eprintln!("Fetching user list with variables: {}", variables);
         let response: Response = self.execute_query(query, Some(&variables)).await?;
-        
+
         // Flatten the list structure and convert to our MediaListEntry format
-        let all_entries: Vec<MediaListEntry> = response.media_list_collection.lists
+        let all_entries: Vec<MediaListEntry> = response
+            .media_list_collection
+            .lists
             .unwrap_or_default()
             .into_iter()
             .filter_map(|list| list.entries)
@@ -268,7 +290,11 @@ impl AniListClient {
         Ok(response.save_media_list_entry)
     }
 
-    pub async fn trending_anime(&self, page: Option<i32>, per_page: Option<i32>) -> Result<Page<Media>> {
+    pub async fn trending_anime(
+        &self,
+        page: Option<i32>,
+        per_page: Option<i32>,
+    ) -> Result<Page<Media>> {
         const QUERY: &str = include_str!("../../graphql/trending_anime.graphql");
 
         #[derive(Deserialize)]
@@ -286,7 +312,11 @@ impl AniListClient {
         Ok(response.page)
     }
 
-    pub async fn popular_anime(&self, page: Option<i32>, per_page: Option<i32>) -> Result<Page<Media>> {
+    pub async fn popular_anime(
+        &self,
+        page: Option<i32>,
+        per_page: Option<i32>,
+    ) -> Result<Page<Media>> {
         const QUERY: &str = include_str!("../../graphql/popular_anime.graphql");
 
         #[derive(Deserialize)]
@@ -323,7 +353,11 @@ impl AniListClient {
         Ok(response.delete_media_list_entry.deleted)
     }
 
-    pub async fn user_activities(&self, page: Option<i32>, per_page: Option<i32>) -> Result<ActivityPage> {
+    pub async fn user_activities(
+        &self,
+        page: Option<i32>,
+        per_page: Option<i32>,
+    ) -> Result<ActivityPage> {
         // First get the viewer ID
         let viewer = self.viewer().await?;
         let viewer_id = viewer.id;
