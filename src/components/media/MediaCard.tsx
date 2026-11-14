@@ -65,9 +65,9 @@ export default function MediaCard({
     navigate("/playback", {
       state: {
         query: title,
-        autoplay: true,
         mediaId: mediaData.id,
         mediaType,
+        ...(mediaType === "anime" ? { episode: progress + 1 } : {}),
       },
     });
   };

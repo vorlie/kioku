@@ -218,9 +218,9 @@ export default function MediaDetail<T extends MediaDetailData>({
     navigate("/playback", {
       state: {
         query: title,
-        autoplay: true,
         mediaId: media.id,
         mediaType,
+        ...(mediaType === "anime" ? { episode: progress + 1 } : {}),
       },
     });
   };

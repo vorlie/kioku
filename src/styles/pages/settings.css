@@ -159,6 +159,59 @@
     box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.12);
 }
 
+.settings-panel--playback .settings-row + .settings-row {
+    border-top: 1px solid var(--border);
+}
+
+.settings-toggle {
+    position: relative;
+    display: inline-flex;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+.settings-toggle input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+}
+
+.settings-toggle__track {
+    display: inline-flex;
+    align-items: center;
+    width: 42px;
+    height: 24px;
+    padding: 3px;
+    background: var(--surface-raised);
+    border: 1px solid var(--border-strong);
+    border-radius: 999px;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.settings-toggle__track span {
+    width: 16px;
+    height: 16px;
+    background: var(--text-muted);
+    border-radius: 50%;
+    transition: transform 0.15s ease, background-color 0.15s ease;
+}
+
+.settings-toggle input:checked + .settings-toggle__track {
+    background: var(--accent);
+    border-color: var(--accent);
+}
+
+.settings-toggle input:checked + .settings-toggle__track span {
+    background: white;
+    transform: translateX(18px);
+}
+
+.settings-toggle input:focus-visible + .settings-toggle__track {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.2);
+}
+
 
 /* ================================================================
    Theme cards
