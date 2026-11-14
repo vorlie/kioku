@@ -8,7 +8,7 @@ mod playback;
 use anilist::AniListClient;
 use auth::AuthManager;
 use auth_server::AuthServer;
-use models::{ActivityPage, Media, MediaListEntry, Page, Viewer, AiringSchedulePage};
+use models::{ActivityPage, AiringSchedulePage, Media, MediaListEntry, Page, Viewer};
 use std::sync::Mutex;
 
 // Global state for auth server
@@ -21,7 +21,9 @@ fn greet(name: &str) -> String {
 }
 
 #[tauri::command]
-async fn start_auth_server(state: tauri::State<'_, AuthServerState>) -> Result<String, error::AppError> {
+async fn start_auth_server(
+    state: tauri::State<'_, AuthServerState>,
+) -> Result<String, error::AppError> {
     eprintln!("start_auth_server command called");
     let mut auth_state = state.0.lock().unwrap();
     let mut server = AuthServer::new();
@@ -36,7 +38,9 @@ async fn start_auth_server(state: tauri::State<'_, AuthServerState>) -> Result<S
 }
 
 #[tauri::command]
-async fn check_auth_token(state: tauri::State<'_, AuthServerState>) -> Result<Option<String>, error::AppError> {
+async fn check_auth_token(
+    state: tauri::State<'_, AuthServerState>,
+) -> Result<Option<String>, error::AppError> {
     let auth_state = state.0.lock().unwrap();
     if let Some(ref server) = *auth_state {
         Ok(server.get_token())
@@ -57,15 +61,21 @@ async fn stop_auth_server(state: tauri::State<'_, AuthServerState>) -> Result<()
 
 #[tauri::command]
 async fn login(app: tauri::AppHandle, access_token: String) -> Result<(), error::AppError> {
-    eprintln!("Login command called with token length: {}", access_token.len());
-    eprintln!("Token prefix: {}", &access_token[..access_token.len().min(10)]);
-    
+    eprintln!(
+        "Login command called with token length: {}",
+        access_token.len()
+    );
+    eprintln!(
+        "Token prefix: {}",
+        &access_token[..access_token.len().min(10)]
+    );
+
     let session = auth::AniListSession {
         access_token,
         token_type: "Bearer".to_string(),
         expires_in: None,
     };
-    
+
     AuthManager::store_token(&app, session)?;
     eprintln!("Login successful");
     Ok(())

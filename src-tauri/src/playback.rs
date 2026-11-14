@@ -1,13 +1,6 @@
 use std::sync::Mutex;
 
-use ani_lib::{
-    relay_stream,
-    AnikotoCzClient,
-    HlsRelay,
-    SearchResult,
-    StreamLink,
-    TranslationType,
-};
+use ani_lib::{relay_stream, AnikotoCzClient, HlsRelay, SearchResult, StreamLink, TranslationType};
 
 pub struct PlaybackState {
     pub relay: Mutex<Option<HlsRelay>>,
@@ -26,8 +19,7 @@ pub async fn playback_search(
     query: String,
     translation: TranslationType,
 ) -> Result<Vec<SearchResult>, String> {
-    let client = AnikotoCzClient::new()
-        .map_err(|error| error.to_string())?;
+    let client = AnikotoCzClient::new().map_err(|error| error.to_string())?;
 
     client
         .search(&query, translation)
@@ -40,8 +32,7 @@ pub async fn playback_episodes(
     show_id: String,
     translation: TranslationType,
 ) -> Result<Vec<String>, String> {
-    let client = AnikotoCzClient::new()
-        .map_err(|error| error.to_string())?;
+    let client = AnikotoCzClient::new().map_err(|error| error.to_string())?;
 
     client
         .episodes(&show_id, translation)
@@ -55,8 +46,7 @@ pub async fn playback_streams(
     episode: String,
     translation: TranslationType,
 ) -> Result<Vec<StreamLink>, String> {
-    let client = AnikotoCzClient::new()
-        .map_err(|error| error.to_string())?;
+    let client = AnikotoCzClient::new().map_err(|error| error.to_string())?;
 
     client
         .streams(&show_id, &episode, translation)
@@ -90,9 +80,7 @@ pub async fn playback_prepare_stream(
 }
 
 #[tauri::command]
-pub fn playback_stop(
-    state: tauri::State<'_, PlaybackState>,
-) -> Result<(), String> {
+pub fn playback_stop(state: tauri::State<'_, PlaybackState>) -> Result<(), String> {
     let mut relay = state
         .relay
         .lock()
