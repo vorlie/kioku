@@ -1,0 +1,122 @@
+# Maintainer: vorlie <https://github.com/vorlie>
+#
+# Native Arch Linux package for Kioku.
+#
+#   cd packaging/arch
+#   makepkg -si
+#
+# Tauri's own bundlers (deb/rpm/AppImage) are bypassed on purpose: pacman
+# packages are built from source and installed under /usr, which is what Arch
+# expects. When tagging a new release, bump pkgver and refresh sha256sums, then
+# regenerate the metadata with `makepkg --printsrcinfo > .SRCINFO`.
+
+pkgname=kioku-for-anilist
+pkgver=0.2.0
+pkgrel=2
+pkgdesc="A polished, modern desktop client for managing your AniList anime and manga libraries"
+arch=('x86_64' 'aarch64')
+url="https://github.com/vorlie/kioku"
+license=('custom')
+depends=(
+  'cairo'
+  'gcc-libs'
+  'glib2'
+  'glibc'
+  'gtk3'
+  'hicolor-icon-theme'
+  'libsoup3'
+  'openssl'
+  'pango'
+  'webkit2gtk-4.1'
+)
+makedepends=('cargo' 'nodejs' 'npm' 'pkgconf' 'rust')
+# makepkg's `lto` option adds -flto to CFLAGS, which turns the assembly objects
+# of the `ring` crate (pulled in through rustls) into bitcode that rust-lld
+# cannot link, failing with `undefined symbol: ring_core_0_17_14__*`. Rust
+# handles its own LTO through Cargo, so the C-level flag is not needed here.
+options=('!lto')
+source=("$pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz")
+sha256sums=('971c7a1f3d79bbc0e87b563aee7361c586b520ceabb9a2aafa602b4d5cb66867')
+
+_workspace="kioku-$pkgver"
+
+prepare() {
+  cd "$srcdir/$_workspace"
+  export CARGO_HOME="$srcdir/cargo"
+
+  npm ci --prefer-offline
+  cargo fetch --locked --manifest-path src-tauri/Cargo.toml
+}
+
+build() {
+  cd "$srcdir/$_workspace"
+  export CARGO_HOME="$srcdir/cargo"
+
+  npm run build
+
+  # `tauri build` enables tauri's `custom-protocol` feature, which is what
+  # switches the binary from dev to production: Tauri 2 sets `cfg(dev)` to
+  # `!custom-protocol`. A plain `cargo build --release` leaves it off, so the
+  # installed app loads `build.devUrl` (http://localhost:1420) instead of the
+  # embedded `frontendDist` and gets stuck on
+  # "Could not connect to localhost: Connection refused".
+  cargo build --release --frozen --features tauri/custom-protocol \
+    --manifest-path src-tauri/Cargo.toml
+}
+
+check() {
+  cd "$srcdir/$_workspace"
+
+  # A binary compiled without tauri's `custom-protocol` feature runs in dev
+  # mode: the webview is pointed at `build.devUrl` instead of the frontend
+  # embedded from `frontendDist`, which the user only discovers at runtime as a
+  # blank window reading "Could not connect to localhost: Connection refused".
+  # tauri's build script records the mode it picked, so enforce production mode
+  # here rather than shipping a package that cannot start.
+  #
+  # Cargo keys the output directory by feature set and never deletes old ones,
+  # so a reused $srcdir can hold a stale `cargo:dev=true` output from an earlier
+  # attempt beside the one that just ran. Only the most recent run describes the
+  # binary that was linked; tauri's plugins have their own `tauri-plugin-*`
+  # directories, which the hex hash in the pattern keeps out of the way.
+  local tauri_output
+  tauri_output=$(ls -t "src-tauri/target/release/build/"tauri-[0-9a-f]*/output 2>/dev/null | head -n 1)
+
+  if [[ -z "$tauri_output" ]]; then
+    error "no tauri build script output found; cannot verify the build mode."
+    return 1
+  fi
+
+  local tauri_dev
+  tauri_dev=$(grep -h '^cargo:dev=' "$tauri_output" | sort -u)
+
+  if [[ "$tauri_dev" != 'cargo:dev=false' ]]; then
+    error "tauri was compiled in dev mode (${tauri_dev:-no cargo:dev= line in $(basename "$(dirname "$tauri_output")")})."
+    error "The package would load build.devUrl instead of the bundled frontend."
+    return 1
+  fi
+}
+
+package() {
+  cd "$srcdir/$_workspace"
+
+  install -Dm755 "src-tauri/target/release/$pkgname" "$pkgdir/usr/bin/$pkgname"
+
+  # The desktop entry is shared with the deb/rpm bundles and lives next to this
+  # PKGBUILD's parent directory, so it is taken from the packaging checkout.
+  install -Dm644 "$startdir/../linux/kioku-for-anilist.desktop" \
+    "$pkgdir/usr/share/applications/$pkgname.desktop"
+
+  install -Dm644 src-tauri/icons/32x32.png \
+    "$pkgdir/usr/share/icons/hicolor/32x32/apps/$pkgname.png"
+  install -Dm644 src-tauri/icons/64x64.png \
+    "$pkgdir/usr/share/icons/hicolor/64x64/apps/$pkgname.png"
+  install -Dm644 src-tauri/icons/128x128.png \
+    "$pkgdir/usr/share/icons/hicolor/128x128/apps/$pkgname.png"
+  install -Dm644 src-tauri/icons/128x128@2x.png \
+    "$pkgdir/usr/share/icons/hicolor/256x256/apps/$pkgname.png"
+  install -Dm644 src-tauri/icons/icon.png \
+    "$pkgdir/usr/share/icons/hicolor/512x512/apps/$pkgname.png"
+
+  install -Dm644 README.md "$pkgdir/usr/share/doc/$pkgname/README.md"
+}

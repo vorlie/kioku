@@ -5,7 +5,6 @@
   "identifier": "com.kioku.vorlie",
   "build": {
     "beforeDevCommand": "npm run dev",
-    "devUrl": "http://localhost:1420",
     "beforeBuildCommand": "npm run build",
     "frontendDist": "../dist"
   },
@@ -36,6 +35,14 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "linux": {
+      "deb": {
+        "desktopTemplate": "../packaging/linux/kioku-for-anilist.desktop"
+      },
+      "rpm": {
+        "desktopTemplate": "../packaging/linux/kioku-for-anilist.desktop"
+      }
+    }
   }
 }
