@@ -326,9 +326,9 @@ pub struct ActivityWrapper {
 #[derive(Debug, Clone, Serialize)]
 #[serde(untagged)]
 pub enum ActivityUnion {
-    TextActivity(TextActivity),
-    ListActivity(ListActivity),
-    MessageActivity(MessageActivity),
+    Text(TextActivity),
+    List(ListActivity),
+    Message(MessageActivity),
 }
 
 impl<'de> Deserialize<'de> for ActivityUnion {
@@ -339,7 +339,7 @@ impl<'de> Deserialize<'de> for ActivityUnion {
         let wrapper = ActivityWrapper::deserialize(deserializer)?;
 
         match wrapper.r#type.as_str() {
-            "TEXT" => Ok(ActivityUnion::TextActivity(TextActivity {
+            "TEXT" => Ok(ActivityUnion::Text(TextActivity {
                 id: wrapper.id,
                 user_id: wrapper.user_id.unwrap_or(0),
                 r#type: wrapper.r#type,
@@ -356,7 +356,7 @@ impl<'de> Deserialize<'de> for ActivityUnion {
                 replies: wrapper.replies,
                 likes: wrapper.likes,
             })),
-            "ANIME_LIST" | "MANGA_LIST" => Ok(ActivityUnion::ListActivity(ListActivity {
+            "ANIME_LIST" | "MANGA_LIST" => Ok(ActivityUnion::List(ListActivity {
                 id: wrapper.id,
                 user_id: wrapper.user_id.unwrap_or(0),
                 r#type: wrapper.r#type,
@@ -375,7 +375,7 @@ impl<'de> Deserialize<'de> for ActivityUnion {
                 replies: wrapper.replies,
                 likes: wrapper.likes,
             })),
-            "MESSAGE" => Ok(ActivityUnion::MessageActivity(MessageActivity {
+            "MESSAGE" => Ok(ActivityUnion::Message(MessageActivity {
                 id: wrapper.id,
                 recipient_id: wrapper.recipient_id,
                 messenger_id: wrapper.messenger_id.unwrap_or(0),

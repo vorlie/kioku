@@ -36,7 +36,7 @@ impl AuthServer {
 
         eprintln!("Attempting to start auth server on port {}", CALLBACK_PORT);
 
-        let server = Server::http(&format!("127.0.0.1:{}", CALLBACK_PORT)).map_err(|e| {
+        let server = Server::http(format!("127.0.0.1:{}", CALLBACK_PORT)).map_err(|e| {
             eprintln!("Failed to start server: {}", e);
             format!(
                 "Failed to start server on port {}: {}. Port may already be in use.",

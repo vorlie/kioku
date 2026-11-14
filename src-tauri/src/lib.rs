@@ -95,7 +95,7 @@ async fn is_authenticated(app: tauri::AppHandle) -> Result<bool, error::AppError
 #[tauri::command]
 async fn get_viewer(app: tauri::AppHandle) -> Result<Viewer, error::AppError> {
     let client = AniListClient::new(app);
-    Ok(client.viewer().await?)
+    client.viewer().await
 }
 
 #[tauri::command]
@@ -106,7 +106,7 @@ async fn search_anime(
     per_page: Option<i32>,
 ) -> Result<Page<Media>, error::AppError> {
     let client = AniListClient::new(app);
-    Ok(client.search_anime(&search, page, per_page).await?)
+    client.search_anime(&search, page, per_page).await
 }
 
 #[tauri::command]
@@ -117,19 +117,19 @@ async fn search_manga(
     per_page: Option<i32>,
 ) -> Result<Page<Media>, error::AppError> {
     let client = AniListClient::new(app);
-    Ok(client.search_manga(&search, page, per_page).await?)
+    client.search_manga(&search, page, per_page).await
 }
 
 #[tauri::command]
 async fn get_anime(app: tauri::AppHandle, id: i32) -> Result<Media, error::AppError> {
     let client = AniListClient::new(app);
-    Ok(client.anime(id).await?)
+    client.anime(id).await
 }
 
 #[tauri::command]
 async fn get_manga(app: tauri::AppHandle, id: i32) -> Result<Media, error::AppError> {
     let client = AniListClient::new(app);
-    Ok(client.manga(id).await?)
+    client.manga(id).await
 }
 
 #[tauri::command]
@@ -139,7 +139,7 @@ async fn get_user_list(
     status: Option<String>,
 ) -> Result<Vec<MediaListEntry>, error::AppError> {
     let client = AniListClient::new(app);
-    Ok(client.user_list(&media_type, status.as_deref()).await?)
+    client.user_list(&media_type, status.as_deref()).await
 }
 
 #[tauri::command]
@@ -151,15 +151,15 @@ async fn update_entry(
     progress: Option<i32>,
 ) -> Result<MediaListEntry, error::AppError> {
     let client = AniListClient::new(app);
-    Ok(client
+    client
         .update_entry_by_media(media_id, status.as_deref(), score, progress, None)
-        .await?)
+        .await
 }
 
 #[tauri::command]
 async fn delete_entry(app: tauri::AppHandle, entry_id: i32) -> Result<bool, error::AppError> {
     let client = AniListClient::new(app);
-    Ok(client.delete_entry(entry_id).await?)
+    client.delete_entry(entry_id).await
 }
 
 #[tauri::command]
@@ -169,7 +169,7 @@ async fn trending_anime(
     per_page: Option<i32>,
 ) -> Result<Page<Media>, error::AppError> {
     let client = AniListClient::new(app);
-    Ok(client.trending_anime(page, per_page).await?)
+    client.trending_anime(page, per_page).await
 }
 
 #[tauri::command]
@@ -180,7 +180,7 @@ async fn fetch_airing_calendar(
     page: Option<i32>,
 ) -> Result<AiringSchedulePage, error::AppError> {
     let client = AniListClient::new(app);
-    Ok(client.airing_schedule(start_time, end_time, page).await?)
+    client.airing_schedule(start_time, end_time, page).await
 }
 
 #[tauri::command]
@@ -190,7 +190,7 @@ async fn popular_anime(
     per_page: Option<i32>,
 ) -> Result<Page<Media>, error::AppError> {
     let client = AniListClient::new(app);
-    Ok(client.popular_anime(page, per_page).await?)
+    client.popular_anime(page, per_page).await
 }
 
 #[tauri::command]
@@ -200,7 +200,7 @@ async fn get_user_activities(
     per_page: Option<i32>,
 ) -> Result<ActivityPage, error::AppError> {
     let client = AniListClient::new(app);
-    Ok(client.user_activities(page, per_page).await?)
+    client.user_activities(page, per_page).await
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]

@@ -73,7 +73,7 @@ impl AniListClient {
         }
 
         serde_json::from_value(response_json["data"].clone())
-            .map_err(|e| AppError::Serialization(e))
+            .map_err(AppError::Serialization)
     }
 
     pub async fn viewer(&self) -> Result<Viewer> {
