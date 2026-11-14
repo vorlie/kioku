@@ -229,7 +229,7 @@ Kioku uses the [AniList GraphQL API](https://anilist.co/) to access user data, l
 
 ## License
 
-No license has been declared in the repository metadata yet, so licensing information is currently unspecified.
+[LICENSE](LICENSE) GNU GPL v3 
 
 ## Status
 
