@@ -120,6 +120,17 @@ npm run tauri dev
 
 > On Linux, ensure the Tauri prerequisites for your distro are installed, including build tools and libraries required by the desktop runtime.
 
+#### Arch Linux (and derivatives)
+
+On Arch, Manjaro, EndeavourOS or CachyOS, install the build dependencies with pacman:
+
+```bash
+sudo pacman -S --needed base-devel nodejs npm rust \
+  webkit2gtk-4.1 gtk3 libsoup3 hicolor-icon-theme
+```
+
+Then run the app as usual with `npm run tauri dev`. See [Arch Linux packaging](#arch-linux-packaging) for build and install details.
+
 ## Installation
 
 Clone the repository and install frontend dependencies:
@@ -163,6 +174,33 @@ npm run tauri build
 ```
 
 This produces the application bundle for the Tauri desktop app.
+
+### Arch Linux packaging
+
+`npm run tauri build` fails on Arch-based distributions while bundling the
+AppImage: linuxdeploy ships a `strip` that cannot read the `.relr.dyn` ELF
+sections emitted by current Arch binutils, so it aborts with
+`failed to run linuxdeploy`. Use the Linux build wrapper, which disables
+stripping and runs the AppImage tooling without needing `libfuse2`:
+
+```bash
+npm run build:linux
+
+# or a subset of bundles
+npm run build:linux -- --bundles deb,rpm
+```
+
+To build and install a native pacman package instead:
+
+```bash
+cd packaging/arch
+makepkg -si
+```
+
+The PKGBUILD builds the released tag from source and installs the binary,
+desktop entry and hicolor icons under `/usr`. Native packages are preferred on
+Arch: `makepkg` handles dependencies through pacman, while the deb/rpm bundles
+target other distributions.
 
 ## Dependency reference
 

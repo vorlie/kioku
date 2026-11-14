@@ -1,0 +1,81 @@
+# Maintainer: vorlie <https://github.com/vorlie>
+#
+# Native Arch Linux package for Kioku.
+#
+#   cd packaging/arch
+#   makepkg -si
+#
+# Tauri's own bundlers (deb/rpm/AppImage) are bypassed on purpose: pacman
+# packages are built from source and installed under /usr, which is what Arch
+# expects. When tagging a new release, bump pkgver and refresh sha256sums, then
+# regenerate the metadata with `makepkg --printsrcinfo > .SRCINFO`.
+
+pkgname=kioku-for-anilist
+pkgver=0.2.0
+pkgrel=1
+pkgdesc="A polished, modern desktop client for managing your AniList anime and manga libraries"
+arch=('x86_64' 'aarch64')
+url="https://github.com/vorlie/kioku"
+license=('custom')
+depends=(
+  'cairo'
+  'gcc-libs'
+  'glib2'
+  'glibc'
+  'gtk3'
+  'hicolor-icon-theme'
+  'libsoup3'
+  'openssl'
+  'pango'
+  'webkit2gtk-4.1'
+)
+makedepends=('cargo' 'nodejs' 'npm' 'pkgconf' 'rust')
+# makepkg's `lto` option adds -flto to CFLAGS, which turns the assembly objects
+# of the `ring` crate (pulled in through rustls) into bitcode that rust-lld
+# cannot link, failing with `undefined symbol: ring_core_0_17_14__*`. Rust
+# handles its own LTO through Cargo, so the C-level flag is not needed here.
+options=('!lto')
+source=("$pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz")
+sha256sums=('971c7a1f3d79bbc0e87b563aee7361c586b520ceabb9a2aafa602b4d5cb66867')
+
+_workspace="kioku-$pkgver"
+
+prepare() {
+  cd "$srcdir/$_workspace"
+  export CARGO_HOME="$srcdir/cargo"
+
+  npm ci --prefer-offline
+  cargo fetch --locked --manifest-path src-tauri/Cargo.toml
+}
+
+build() {
+  cd "$srcdir/$_workspace"
+  export CARGO_HOME="$srcdir/cargo"
+
+  npm run build
+  cargo build --release --frozen --manifest-path src-tauri/Cargo.toml
+}
+
+package() {
+  cd "$srcdir/$_workspace"
+
+  install -Dm755 "src-tauri/target/release/$pkgname" "$pkgdir/usr/bin/$pkgname"
+
+  # The desktop entry is shared with the deb/rpm bundles and lives next to this
+  # PKGBUILD's parent directory, so it is taken from the packaging checkout.
+  install -Dm644 "$startdir/../linux/kioku-for-anilist.desktop" \
+    "$pkgdir/usr/share/applications/$pkgname.desktop"
+
+  install -Dm644 src-tauri/icons/32x32.png \
+    "$pkgdir/usr/share/icons/hicolor/32x32/apps/$pkgname.png"
+  install -Dm644 src-tauri/icons/64x64.png \
+    "$pkgdir/usr/share/icons/hicolor/64x64/apps/$pkgname.png"
+  install -Dm644 src-tauri/icons/128x128.png \
+    "$pkgdir/usr/share/icons/hicolor/128x128/apps/$pkgname.png"
+  install -Dm644 src-tauri/icons/128x128@2x.png \
+    "$pkgdir/usr/share/icons/hicolor/256x256/apps/$pkgname.png"
+  install -Dm644 src-tauri/icons/icon.png \
+    "$pkgdir/usr/share/icons/hicolor/512x512/apps/$pkgname.png"
+
+  install -Dm644 README.md "$pkgdir/usr/share/doc/$pkgname/README.md"
+}

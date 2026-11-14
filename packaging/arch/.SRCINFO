@@ -1,0 +1,27 @@
+pkgbase = kioku-for-anilist
+	pkgdesc = A polished, modern desktop client for managing your AniList anime and manga libraries
+	pkgver = 0.2.0
+	pkgrel = 1
+	url = https://github.com/vorlie/kioku
+	arch = x86_64
+	arch = aarch64
+	license = custom
+	makedepends = cargo
+	makedepends = nodejs
+	makedepends = npm
+	makedepends = pkgconf
+	makedepends = rust
+	depends = cairo
+	depends = gcc-libs
+	depends = glib2
+	depends = glibc
+	depends = gtk3
+	depends = hicolor-icon-theme
+	depends = libsoup3
+	depends = openssl
+	depends = pango
+	depends = webkit2gtk-4.1
+	source = kioku-for-anilist-0.2.0.tar.gz::https://github.com/vorlie/kioku/archive/v0.2.0.tar.gz
+	sha256sums = 971c7a1f3d79bbc0e87b563aee7361c586b520ceabb9a2aafa602b4d5cb66867
+
+pkgname = kioku-for-anilist

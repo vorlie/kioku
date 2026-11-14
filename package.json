@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "build:linux": "bash ./scripts/build-linux.sh",
     "preview": "vite preview",
     "tauri": "tauri"
   },
