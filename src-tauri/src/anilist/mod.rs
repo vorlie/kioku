@@ -72,8 +72,7 @@ impl AniListClient {
             return Err(AppError::AniList(format!("GraphQL errors: {}", errors)));
         }
 
-        serde_json::from_value(response_json["data"].clone())
-            .map_err(AppError::Serialization)
+        serde_json::from_value(response_json["data"].clone()).map_err(AppError::Serialization)
     }
 
     pub async fn viewer(&self) -> Result<Viewer> {
