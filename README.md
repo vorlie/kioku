@@ -93,7 +93,7 @@ On Windows, the following are typically required for Tauri builds:
 git clone https://github.com/vorlie/kioku.git
 cd kioku
 npm install
-npm run tauri dev
+npm run dev:desktop
 ```
 
 > On Windows, install Visual Studio 2022 Build Tools with the Desktop development with C++ workload before running Tauri builds.
@@ -104,7 +104,7 @@ npm run tauri dev
 git clone https://github.com/vorlie/kioku.git
 cd kioku
 npm install
-npm run tauri dev
+npm run dev:desktop
 ```
 
 > macOS users may need Xcode Command Line Tools installed for native build dependencies.
@@ -115,7 +115,7 @@ npm run tauri dev
 git clone https://github.com/vorlie/kioku.git
 cd kioku
 npm install
-npm run tauri dev
+npm run dev:desktop
 ```
 
 > On Linux, ensure the Tauri prerequisites for your distro are installed, including build tools and libraries required by the desktop runtime.
@@ -129,7 +129,7 @@ sudo pacman -S --needed base-devel nodejs npm rust \
   webkit2gtk-4.1 gtk3 libsoup3 hicolor-icon-theme
 ```
 
-Then run the app as usual with `npm run tauri dev`. See [Arch Linux packaging](#arch-linux-packaging) for build and install details.
+Then run the app as usual with `npm run dev:desktop`. See [Arch Linux packaging](#arch-linux-packaging) for build and install details.
 
 ## Installation
 
@@ -154,10 +154,15 @@ This starts the Vite development server for the web UI.
 ### Run the desktop app with Tauri
 
 ```bash
-npm run tauri dev
+npm run dev:desktop
 ```
 
 This launches the desktop application and connects the web frontend to the Tauri runtime.
+
+`dev:desktop` passes `src-tauri/tauri.dev.conf.json`, which is where `build.devUrl`
+lives. Keeping the dev server URL out of the base `tauri.conf.json` means a plain
+`cargo build --release` cannot bake it in: the binary loads the frontend embedded
+from `frontendDist` instead of trying to reach `localhost:1420`.
 
 ## Production build
 

@@ -1,7 +1,7 @@
 pkgbase = kioku-for-anilist
 	pkgdesc = A polished, modern desktop client for managing your AniList anime and manga libraries
 	pkgver = 0.2.0
-	pkgrel = 1
+	pkgrel = 2
 	url = https://github.com/vorlie/kioku
 	arch = x86_64
 	arch = aarch64
@@ -21,6 +21,7 @@ pkgbase = kioku-for-anilist
 	depends = openssl
 	depends = pango
 	depends = webkit2gtk-4.1
+	options = !lto
 	source = kioku-for-anilist-0.2.0.tar.gz::https://github.com/vorlie/kioku/archive/v0.2.0.tar.gz
 	sha256sums = 971c7a1f3d79bbc0e87b563aee7361c586b520ceabb9a2aafa602b4d5cb66867
 
