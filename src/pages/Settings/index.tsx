@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Check, Palette, UserRound, Info, Settings2, ExternalLink } from "lucide-react";
+import { Check, Palette, UserRound, Info, Settings2, ExternalLink, Play } from "lucide-react";
 import { open } from "@tauri-apps/plugin-shell";
 
 import { useAuth } from "../../hooks/useAuth";
 import LoginModal from "../../components/ui/LoginModal";
 import PageHeader from "../../components/layout/PageHeader";
+import type { TranslationType } from "../../types/playback";
 
 type Theme =
   | "catppuccin"
@@ -60,6 +61,12 @@ export default function Settings() {
 
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [theme, setTheme] = useState<Theme>(getSavedTheme);
+  const [audioPreference, setAudioPreference] = useState<TranslationType>(
+    () => localStorage.getItem("playback-audio-preference") === "dub" ? "dub" : "sub",
+  );
+  const [autoPlayFromWatchNow, setAutoPlayFromWatchNow] = useState(
+    () => localStorage.getItem("playback-auto-play") !== "false",
+  );
 
   const handleThemeChange = (newTheme: Theme) => {
     setTheme(newTheme);
@@ -133,6 +140,72 @@ export default function Settings() {
                   )}
                 </button>
               ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="settings-section">
+          <div className="settings-section__header">
+            <div className="settings-section__icon">
+              <Play size={18} />
+            </div>
+
+            <div>
+              <h2 className="settings-section__title">Playback</h2>
+              <p className="settings-section__description">
+                Choose how playback starts from Watch Now.
+              </p>
+            </div>
+          </div>
+
+          <div className="settings-panel settings-panel--playback">
+            <div className="settings-row">
+              <div className="settings-row__content">
+                <span className="settings-row__title">Preferred audio</span>
+                <span className="settings-row__description">
+                  Use this audio by default when it is available.
+                </span>
+              </div>
+
+              <select
+                className="settings-select"
+                aria-label="Preferred playback audio"
+                value={audioPreference}
+                onChange={(event) => {
+                  const preference: TranslationType =
+                    event.target.value === "dub" ? "dub" : "sub";
+                  setAudioPreference(preference);
+                  localStorage.setItem("playback-audio-preference", preference);
+                }}
+              >
+                <option value="sub">Sub</option>
+                <option value="dub">Dub</option>
+              </select>
+            </div>
+
+            <div className="settings-row">
+              <div className="settings-row__content">
+                <span className="settings-row__title">Auto play from Watch Now</span>
+                <span className="settings-row__description">
+                  Match the title, select your next episode, and start playback automatically.
+                </span>
+              </div>
+
+              <label className="settings-toggle">
+                <input
+                  type="checkbox"
+                  aria-label="Auto play from Watch Now"
+                  checked={autoPlayFromWatchNow}
+                  onChange={(event) => {
+                    const enabled = event.target.checked;
+                    setAutoPlayFromWatchNow(enabled);
+                    localStorage.setItem("playback-auto-play", String(enabled));
+                  }}
+                />
+                <span className="settings-toggle__track" aria-hidden="true">
+                  <span />
+                </span>
+              </label>
             </div>
           </div>
         </section>
