@@ -2,7 +2,7 @@
 
 <div align="center">
 
-[![Version](https://img.shields.io/badge/version-0.2.0-blue)](https://github.com/vorlie/kioku)
+[![Version](https://img.shields.io/badge/version-0.3.0-blue)](https://github.com/vorlie/kioku)
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?logo=typescript)](https://www.typescriptlang.org/)
 [![Tauri](https://img.shields.io/badge/Tauri-2-FFC131?logo=tauri)](https://tauri.app/)
@@ -247,7 +247,7 @@ target other distributions.
 | `anyhow` | `1` | Error handling |
 | `thiserror` | `1` | Error derivation |
 | `tracing` / `tracing-subscriber` | `0.1` / `0.3` | Logging |
-| `ani_lib` (`ani-cli-rs`) | `0.11.0` | AniList / media-related Rust integration |
+| `ani_lib` (`ani-cli-rs`) | `0.11.3` | AniList / media-related Rust integration |
 
 ## Project structure
 

@@ -285,7 +285,7 @@ export default function Settings() {
                   </span>
                 </div>
 
-                <span className="settings-about__version">v0.2.0</span>
+                <span className="settings-about__version">v0.3.0</span>
               </div>
 
               <div className="settings-about__links">

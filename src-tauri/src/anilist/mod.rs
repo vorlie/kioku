@@ -338,6 +338,7 @@ impl AniListClient {
         Ok(all_entries)
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub async fn update_entry_by_media(
         &self,
         media_id: i32,
@@ -432,6 +433,7 @@ impl AniListClient {
         Ok(response.page)
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub async fn discover_media(
         &self,
         media_type: &str,

@@ -2430,7 +2430,7 @@ dependencies = [
 
 [[package]]
 name = "kioku-for-anilist"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "ani-cli-rs",
  "anyhow",
