@@ -1,4 +1,4 @@
-query ($userId: Int, $page: Int, $perPage: Int) {
+query ($userId: Int, $isFollowing: Boolean, $typeIn: [ActivityType], $page: Int, $perPage: Int) {
   Page(page: $page, perPage: $perPage) {
     pageInfo {
       total
@@ -7,7 +7,7 @@ query ($userId: Int, $page: Int, $perPage: Int) {
       lastPage
       hasNextPage
     }
-    activities(userId: $userId, sort: ID_DESC) {
+    activities(userId: $userId, isFollowing: $isFollowing, type_in: $typeIn, sort: ID_DESC) {
       ... on TextActivity {
         id
         userId

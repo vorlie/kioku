@@ -82,7 +82,7 @@
 .search-input__field:focus {
     border-color: var(--accent);
     background: var(--surface);
-    box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.1);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent);
 }
 
 .search-input__clear {
@@ -190,6 +190,30 @@
     min-width: 0;
 }
 
+.browse-page {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+}
+
+.discovery-filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.discovery-filters .form-select {
+    width: auto;
+    min-width: 150px;
+}
+
+.discovery-pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: var(--space-6);
+}
+
 
 /* ================================================================
    Search States
@@ -219,8 +243,8 @@
     flex-shrink: 0;
 
     color: var(--accent);
-    background: rgba(var(--accent-rgb), 0.1);
-    border: 1px solid rgba(var(--accent-rgb), 0.18);
+    background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+    border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--border));
     border-radius: var(--radius-lg);
 }
 

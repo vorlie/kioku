@@ -38,13 +38,13 @@
     background:
         linear-gradient(
             90deg,
-            var(--background) 0%,
-            rgba(15, 15, 15, 0.88) 38%,
-            rgba(15, 15, 15, 0.45) 100%
+            var(--surface) 0%,
+            color-mix(in srgb, var(--surface) 88%, transparent) 38%,
+            color-mix(in srgb, var(--surface) 45%, transparent) 100%
         ),
         linear-gradient(
             0deg,
-            rgba(15, 15, 15, 0.75),
+            color-mix(in srgb, var(--surface) 75%, transparent),
             transparent
         );
 }

@@ -61,8 +61,8 @@
     flex-shrink: 0;
 
     color: var(--accent);
-    background: rgba(var(--accent-rgb), 0.08);
-    border: 1px solid rgba(var(--accent-rgb), 0.14);
+    background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+    border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--border));
     border-radius: var(--radius-md);
 }
 
@@ -156,7 +156,7 @@
 .settings-select:focus {
     outline: none;
     border-color: var(--accent);
-    box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.12);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 16%, transparent);
 }
 
 .settings-panel--playback .settings-row + .settings-row {
@@ -203,13 +203,13 @@
 }
 
 .settings-toggle input:checked + .settings-toggle__track span {
-    background: white;
+    background: var(--accent-contrast);
     transform: translateX(18px);
 }
 
 .settings-toggle input:focus-visible + .settings-toggle__track {
     outline: none;
-    box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.2);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 22%, transparent);
 }
 
 
@@ -258,7 +258,7 @@
 }
 
 .settings-theme--active {
-    background: rgba(var(--accent-rgb), 0.06);
+    background: color-mix(in srgb, var(--accent) 8%, var(--surface));
     box-shadow: inset 2px 0 0 var(--accent);
 }
 
@@ -373,7 +373,7 @@
 
 .settings-account__indicator--connected {
     background: var(--success);
-    box-shadow: 0 0 0 3px rgba(var(--success-rgb), 0.1);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--success) 18%, transparent);
 }
 
 
@@ -479,7 +479,7 @@
 .settings-about__link:focus-visible {
     outline: none;
     border-color: var(--accent);
-    box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.12);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 16%, transparent);
 }
 
 

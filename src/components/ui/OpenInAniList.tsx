@@ -1,4 +1,4 @@
-import { open } from "@tauri-apps/plugin-shell";
+import { openExternalUrl } from "../../utils/safeUrl";
 import { ExternalLink } from "lucide-react";
 
 interface OpenInAniListProps {
@@ -11,12 +11,12 @@ export default function OpenInAniList({
   mediaType,
 }: OpenInAniListProps) {
   const handleOpen = async () => {
-    await open(`https://anilist.co/${mediaType}/${mediaId}`);
+    await openExternalUrl(`https://anilist.co/${mediaType}/${mediaId}`);
   };
 
   return (
-    <button onClick={handleOpen} className="button-primary media-detail__action-button">
-      <ExternalLink size={16} />
+    <button type="button" onClick={handleOpen} className="button-secondary media-detail__action-button">
+      <ExternalLink size={16} aria-hidden="true" />
       Open on AniList
     </button>
   );

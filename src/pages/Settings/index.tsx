@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Check, Palette, UserRound, Info, Settings2, ExternalLink, Play } from "lucide-react";
-import { open } from "@tauri-apps/plugin-shell";
+import { openExternalUrl } from "../../utils/safeUrl";
 
 import { useAuth } from "../../hooks/useAuth";
 import LoginModal from "../../components/ui/LoginModal";
@@ -116,6 +116,8 @@ export default function Settings() {
               {THEMES.map((item) => (
                 <button
                   key={item.id}
+                  type="button"
+                  aria-pressed={theme === item.id}
                   className={`settings-theme ${
                     theme === item.id ? "settings-theme--active" : ""
                   }`}
@@ -243,11 +245,12 @@ export default function Settings() {
               </div>
 
               {isAuthenticated ? (
-                <button onClick={logout} className="button-secondary">
+                <button type="button" onClick={logout} className="button-secondary">
                   Sign Out
                 </button>
               ) : (
                 <button
+                  type="button"
                   onClick={() => setShowLoginModal(true)}
                   className="button-primary"
                 >
@@ -287,18 +290,20 @@ export default function Settings() {
 
               <div className="settings-about__links">
                 <button
+                  type="button"
                   className="settings-about__link"
-                  onClick={() => open("https://github.com/vorlie/kioku")}
+                  onClick={() => void openExternalUrl("https://github.com/vorlie/kioku")}
                 >
-                  <ExternalLink size={14} /> 
+                  <ExternalLink size={14} aria-hidden="true" /> 
                   GitHub
                 </button>
 
                 <button
+                  type="button"
                   className="settings-about__link"
-                  onClick={() => open("https://anilist.co")}
+                  onClick={() => void openExternalUrl("https://anilist.co")}
                 >
-                  <ExternalLink size={14} /> 
+                  <ExternalLink size={14} aria-hidden="true" /> 
                   AniList
                 </button>
               </div>

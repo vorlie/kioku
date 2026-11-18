@@ -3,20 +3,29 @@ mutation (
   $status: MediaListStatus
   $score: Float
   $progress: Int
+  $progressVolumes: Int
+  $repeat: Int
   $notes: String
+  $startedAt: FuzzyDateInput
+  $completedAt: FuzzyDateInput
 ) {
   SaveMediaListEntry(
     mediaId: $mediaId
     status: $status
     score: $score
     progress: $progress
+    progressVolumes: $progressVolumes
+    repeat: $repeat
     notes: $notes
+    startedAt: $startedAt
+    completedAt: $completedAt
   ) {
     id
     mediaId
     status
     score
     progress
+    progressVolumes
     repeat
     priority
     notes

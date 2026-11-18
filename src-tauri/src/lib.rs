@@ -5,11 +5,15 @@ mod error;
 mod models;
 mod playback;
 
-use anilist::AniListClient;
+use anilist::{AniListClient, AniListState};
 use auth::AuthManager;
 use auth_server::AuthServer;
-use models::{ActivityPage, AiringSchedulePage, Media, MediaListEntry, Page, Viewer};
+use models::{
+    ActivityPage, ActivityReply, ActivityUnion, AiringSchedulePage, LikeToggleResult, Media,
+    MediaListEntry, Page, Viewer,
+};
 use std::sync::Mutex;
+use tauri::Manager;
 
 // Global state for auth server
 struct AuthServerState(Mutex<Option<AuthServer>>);
@@ -77,6 +81,9 @@ async fn login(app: tauri::AppHandle, access_token: String) -> Result<(), error:
     };
 
     AuthManager::store_token(&app, session)?;
+    if let Some(state) = app.try_state::<AniListState>() {
+        state.clear_viewer_id();
+    }
     eprintln!("Login successful");
     Ok(())
 }
@@ -84,6 +91,9 @@ async fn login(app: tauri::AppHandle, access_token: String) -> Result<(), error:
 #[tauri::command]
 async fn logout(app: tauri::AppHandle) -> Result<(), error::AppError> {
     AuthManager::clear_token(&app)?;
+    if let Some(state) = app.try_state::<AniListState>() {
+        state.clear_viewer_id();
+    }
     Ok(())
 }
 
@@ -149,10 +159,25 @@ async fn update_entry(
     status: Option<String>,
     score: Option<f64>,
     progress: Option<i32>,
+    progress_volumes: Option<i32>,
+    repeat: Option<i32>,
+    notes: Option<String>,
+    started_at: Option<models::FuzzyDate>,
+    completed_at: Option<models::FuzzyDate>,
 ) -> Result<MediaListEntry, error::AppError> {
     let client = AniListClient::new(app);
     client
-        .update_entry_by_media(media_id, status.as_deref(), score, progress, None)
+        .update_entry_by_media(
+            media_id,
+            status.as_deref(),
+            score,
+            progress,
+            progress_volumes,
+            repeat,
+            notes.as_deref(),
+            started_at,
+            completed_at,
+        )
         .await
 }
 
@@ -194,13 +219,110 @@ async fn popular_anime(
 }
 
 #[tauri::command]
+async fn discover_media(
+    app: tauri::AppHandle,
+    media_type: String,
+    search: Option<String>,
+    genre: Option<String>,
+    season_year: Option<i32>,
+    season: Option<String>,
+    format: Option<String>,
+    status: Option<String>,
+    sort: Option<String>,
+    page: Option<i32>,
+    per_page: Option<i32>,
+) -> Result<Page<Media>, error::AppError> {
+    let client = AniListClient::new(app);
+    client
+        .discover_media(
+            &media_type,
+            search.as_deref(),
+            genre.as_deref(),
+            season_year,
+            season.as_deref(),
+            format.as_deref(),
+            status.as_deref(),
+            sort.as_deref(),
+            page,
+            per_page,
+        )
+        .await
+}
+
+#[tauri::command]
+async fn toggle_favourite(
+    app: tauri::AppHandle,
+    media_id: i32,
+    media_type: String,
+) -> Result<bool, error::AppError> {
+    let client = AniListClient::new(app);
+    client.toggle_favourite(media_id, &media_type).await
+}
+
+#[tauri::command]
 async fn get_user_activities(
     app: tauri::AppHandle,
+    scope: Option<String>,
+    type_in: Option<Vec<String>>,
     page: Option<i32>,
     per_page: Option<i32>,
 ) -> Result<ActivityPage, error::AppError> {
     let client = AniListClient::new(app);
-    client.user_activities(page, per_page).await
+    client
+        .user_activities(scope.as_deref(), type_in, page, per_page)
+        .await
+}
+
+#[tauri::command]
+async fn get_activity_replies(
+    app: tauri::AppHandle,
+    activity_id: i32,
+    page: Option<i32>,
+    per_page: Option<i32>,
+) -> Result<Vec<ActivityReply>, error::AppError> {
+    let client = AniListClient::new(app);
+    client.activity_replies(activity_id, page, per_page).await
+}
+
+#[tauri::command]
+async fn toggle_like(
+    app: tauri::AppHandle,
+    id: i32,
+    like_type: String,
+) -> Result<LikeToggleResult, error::AppError> {
+    let client = AniListClient::new(app);
+    client.toggle_like(id, &like_type).await
+}
+
+#[tauri::command]
+async fn save_text_activity(
+    app: tauri::AppHandle,
+    text: String,
+) -> Result<ActivityUnion, error::AppError> {
+    let client = AniListClient::new(app);
+    client.save_text_activity(&text).await
+}
+
+#[tauri::command]
+async fn save_activity_reply(
+    app: tauri::AppHandle,
+    activity_id: i32,
+    text: String,
+) -> Result<ActivityReply, error::AppError> {
+    let client = AniListClient::new(app);
+    client.save_activity_reply(activity_id, &text).await
+}
+
+#[tauri::command]
+async fn delete_activity(app: tauri::AppHandle, id: i32) -> Result<bool, error::AppError> {
+    let client = AniListClient::new(app);
+    client.delete_activity(id).await
+}
+
+#[tauri::command]
+async fn delete_activity_reply(app: tauri::AppHandle, id: i32) -> Result<bool, error::AppError> {
+    let client = AniListClient::new(app);
+    client.delete_activity_reply(id).await
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -209,6 +331,7 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_shell::init())
         .manage(AuthServerState(Mutex::new(None)))
+        .manage(AniListState::new())
         .manage(playback::PlaybackState::new())
         .invoke_handler(tauri::generate_handler![
             greet,
@@ -229,7 +352,15 @@ pub fn run() {
             trending_anime,
             fetch_airing_calendar,
             popular_anime,
+            discover_media,
+            toggle_favourite,
             get_user_activities,
+            get_activity_replies,
+            toggle_like,
+            save_text_activity,
+            save_activity_reply,
+            delete_activity,
+            delete_activity_reply,
             playback::playback_search,
             playback::playback_episodes,
             playback::playback_streams,

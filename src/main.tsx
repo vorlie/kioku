@@ -5,14 +5,16 @@ import { AuthProvider } from "./hooks/useAuth";
 import "./index.css";
 
 const savedTheme = localStorage.getItem("theme");
-if (savedTheme === "catppuccin" 
-  || savedTheme === "espresso" 
-  || savedTheme === "latte" 
-  || savedTheme === "anilist-dark" 
-  || savedTheme === "anilist-light"
-  || savedTheme === "black") {
-  document.documentElement.dataset.theme = savedTheme;
-}
+const validThemes = new Set([
+  "catppuccin",
+  "espresso",
+  "latte",
+  "anilist-dark",
+  "anilist-light",
+  "black",
+]);
+document.documentElement.dataset.theme =
+  savedTheme && validThemes.has(savedTheme) ? savedTheme : "espresso";
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>

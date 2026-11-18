@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { useViewer, useAnimeList } from "../../hooks/useAniList";
 import MediaCard from "../../components/media/MediaCard";
@@ -7,6 +8,7 @@ import LayoutToggle from "../../components/layout/LayoutToggle";
 import { BookOpen, Film, LogIn, Loader2, Star, Tv } from "lucide-react";
 
 export default function Home() {
+  const navigate = useNavigate();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const { viewer, isLoading: viewerLoading } = useViewer();
   const { list: watchingList, isLoading: watchingLoading } =
@@ -44,9 +46,8 @@ export default function Home() {
           </p>
 
           <button
-            onClick={() => {
-              window.location.href = "/settings";
-            }}
+            type="button"
+            onClick={() => navigate("/settings")}
             className="button-primary home-welcome__button"
           >
             <LogIn size={17} />

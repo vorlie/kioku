@@ -12,10 +12,13 @@ interface TabsProps {
 
 export default function Tabs({ tabs, activeTab, onTabChange }: TabsProps) {
   return (
-    <div className="tabs">
+    <div className="tabs" role="tablist">
       {tabs.map((tab) => (
         <button
           key={tab.id}
+          type="button"
+          role="tab"
+          aria-selected={activeTab === tab.id}
           onClick={() => onTabChange(tab.id)}
           className={`tabs__button${activeTab === tab.id ? " tabs__button--active" : ""}`}
         >

@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { Loader2, X } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { openUrl } from "@tauri-apps/plugin-opener";
 
@@ -78,21 +79,36 @@ export default function LoginModal({ onClose }: LoginModalProps) {
     onClose();
   };
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !isLoading) {
+        void cancel();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isLoading]);
+
   return (
-    <div className="modal-backdrop" onClick={cancel}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
-        
+    <div className="modal-backdrop" onClick={() => !isLoading && void cancel()}>
+      <div
+        className="modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="login-modal-title"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header Section */}
         <div className="modal-header">
-          <h2 className="modal-title">Sign in with AniList</h2>
+          <h2 id="login-modal-title" className="modal-title">Sign in with AniList</h2>
           {!isLoading && (
-            <button className="modal-close-btn" onClick={cancel} aria-label="Close">
-              ✕
+            <button type="button" className="modal-close-btn" onClick={() => void cancel()} aria-label="Close">
+              <X size={18} aria-hidden="true" />
             </button>
           )}
         </div>
 
-        {error && <div className="modal-error-banner">{error}</div>}
+        {error && <div className="modal-error-banner" role="alert">{error}</div>}
 
         {/* Modal Main Body Content */}
         {!isLoading ? (
@@ -102,7 +118,7 @@ export default function LoginModal({ onClose }: LoginModalProps) {
               <p className="login-option__desc">
                 Click the button below to sign in automatically via your browser.
               </p>
-              <button className="button-primary" style={{ width: "100%" }} onClick={handleOAuthLogin}>
+              <button type="button" className="button-primary" style={{ width: "100%" }} onClick={handleOAuthLogin}>
                 Sign In with AniList
               </button>
             </div>
@@ -119,13 +135,13 @@ export default function LoginModal({ onClose }: LoginModalProps) {
               <ManualTokenForm onSubmit={manualLogin} />
             </div>
 
-            <button className="button-secondary" style={{ width: "100%", marginTop: "var(--space-2)" }} onClick={cancel}>
+            <button type="button" className="button-secondary" style={{ width: "100%", marginTop: "var(--space-2)" }} onClick={() => void cancel()}>
               Cancel
             </button>
           </div>
         ) : (
           <div className="modal-loading-pane">
-            <div className="modal-loading-pane__spinner" />
+            <Loader2 size={32} className="modal-loading-pane__spinner" aria-hidden="true" />
             <p className="modal-loading-pane__status">{status || "Signing in..."}</p>
             <p className="modal-loading-pane__hint">
               This window will close automatically when complete.
@@ -152,10 +168,11 @@ function ManualTokenForm({ onSubmit }: { onSubmit: (token: string) => Promise<vo
   return (
     <form onSubmit={submit} className="login-form">
       <div className="login-form__field" style={{ display: "flex", flexDirection: "column", gap: "var(--space-2)" }}>
-        <label className="form-label" style={{ fontSize: "var(--font-size-small)", fontWeight: "var(--font-weight-medium)" }}>
+        <label htmlFor="manual-access-token" className="form-label" style={{ fontSize: "var(--font-size-small)", fontWeight: "var(--font-weight-medium)" }}>
           Access Token
         </label>
         <input
+          id="manual-access-token"
           className="form-input form-input--dark"
           type="text"
           value={token}

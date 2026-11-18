@@ -30,6 +30,7 @@ export interface MediaListEntry {
   status?: string;
   score?: number;
   progress?: number;
+  progressVolumes?: number;
   repeat?: number;
   priority?: string;
   notes?: string;
@@ -61,8 +62,51 @@ export interface Media {
   source?: string;
   countryOfOrigin?: string;
   isAdult?: boolean;
+  isFavourite?: boolean;
   siteUrl?: string;
+  nextAiringEpisode?: {
+    airingAt: number;
+    timeUntilAiring: number;
+    episode: number;
+  };
   relations?: MediaRelationConnection;
+  characters?: {
+    edges?: {
+      role?: string;
+      node?: {
+        id: number;
+        name?: { full?: string };
+        image?: { large?: string; medium?: string };
+      };
+      voiceActors?: {
+        id: number;
+        name?: { full?: string };
+        image?: { large?: string; medium?: string };
+      }[];
+    }[];
+  };
+  staff?: {
+    edges?: {
+      role?: string;
+      node?: {
+        id: number;
+        name?: { full?: string };
+        image?: { large?: string; medium?: string };
+      };
+    }[];
+  };
+  recommendations?: {
+    nodes?: {
+      mediaRecommendation?: {
+        id: number;
+        type?: "ANIME" | "MANGA";
+        title: Title;
+        coverImage: CoverImage;
+        format?: string;
+        averageScore?: number;
+      };
+    }[];
+  };
 }
 
 export interface MediaRelationEdge {

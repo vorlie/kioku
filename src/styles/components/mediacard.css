@@ -52,9 +52,23 @@
     );
 }
 
-.media-card:focus-visible {
+.media-card:has(.media-card__trigger:focus-visible) {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
+}
+
+.media-card__trigger {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.media-card__trigger:focus-visible {
+  outline: none;
 }
 
 /* ============================================================
@@ -271,6 +285,44 @@
 
 .media-card__progress-label span:last-child {
   color: var(--text-secondary);
+}
+
+.media-card__progress-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.media-card__increment {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  padding: 2px 6px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface-raised);
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.1;
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.media-card__increment:hover:not(:disabled) {
+  color: var(--accent-contrast);
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.media-card__increment:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .media-card__progress-track {

@@ -1,0 +1,67 @@
+query (
+  $type: MediaType
+  $search: String
+  $genre: String
+  $seasonYear: Int
+  $season: MediaSeason
+  $format: MediaFormat
+  $status: MediaStatus
+  $sort: [MediaSort]
+  $page: Int
+  $perPage: Int
+) {
+  Page(page: $page, perPage: $perPage) {
+    pageInfo {
+      total
+      perPage
+      currentPage
+      lastPage
+      hasNextPage
+    }
+    media(
+      type: $type
+      search: $search
+      genre: $genre
+      seasonYear: $seasonYear
+      season: $season
+      format: $format
+      status: $status
+      sort: $sort
+      isAdult: false
+    ) {
+      id
+      title {
+        romaji
+        english
+        native
+        userPreferred
+      }
+      coverImage {
+        extraLarge
+        large
+        medium
+        color
+      }
+      bannerImage
+      description
+      episodes
+      duration
+      chapters
+      volumes
+      status
+      genres
+      averageScore
+      meanScore
+      format
+      season
+      seasonYear
+      studios {
+        nodes {
+          id
+          name
+          isAnimationStudio
+        }
+      }
+    }
+  }
+}

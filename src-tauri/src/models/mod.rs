@@ -33,6 +33,8 @@ pub struct MediaListEntry {
     pub status: Option<String>,
     pub score: Option<f64>,
     pub progress: Option<i32>,
+    #[serde(rename = "progressVolumes")]
+    pub progress_volumes: Option<i32>,
     pub repeat: Option<i32>,
     pub priority: Option<String>,
     pub notes: Option<String>,
@@ -83,9 +85,104 @@ pub struct Media {
     pub country_of_origin: Option<String>,
     #[serde(rename = "isAdult")]
     pub is_adult: Option<bool>,
+    #[serde(rename = "isFavourite")]
+    pub is_favourite: Option<bool>,
     #[serde(rename = "siteUrl")]
     pub site_url: Option<String>,
+    #[serde(rename = "nextAiringEpisode")]
+    pub next_airing_episode: Option<NextAiringEpisode>,
     pub relations: Option<MediaRelations>,
+    pub characters: Option<CharacterConnection>,
+    pub staff: Option<StaffConnection>,
+    pub recommendations: Option<RecommendationConnection>,
+}
+
+#[derive(Deserialize, Serialize, Debug, Clone)]
+pub struct NextAiringEpisode {
+    #[serde(rename = "airingAt")]
+    pub airing_at: i64,
+    #[serde(rename = "timeUntilAiring")]
+    pub time_until_airing: i64,
+    pub episode: i32,
+}
+
+#[derive(Deserialize, Serialize, Debug, Clone)]
+pub struct PersonName {
+    pub full: Option<String>,
+}
+
+#[derive(Deserialize, Serialize, Debug, Clone)]
+pub struct PersonImage {
+    pub large: Option<String>,
+    pub medium: Option<String>,
+}
+
+#[derive(Deserialize, Serialize, Debug, Clone)]
+pub struct CharacterNode {
+    pub id: i32,
+    pub name: Option<PersonName>,
+    pub image: Option<PersonImage>,
+}
+
+#[derive(Deserialize, Serialize, Debug, Clone)]
+pub struct VoiceActorNode {
+    pub id: i32,
+    pub name: Option<PersonName>,
+    pub image: Option<PersonImage>,
+}
+
+#[derive(Deserialize, Serialize, Debug, Clone)]
+pub struct CharacterEdge {
+    pub role: Option<String>,
+    pub node: Option<CharacterNode>,
+    #[serde(rename = "voiceActors")]
+    pub voice_actors: Option<Vec<VoiceActorNode>>,
+}
+
+#[derive(Deserialize, Serialize, Debug, Clone)]
+pub struct CharacterConnection {
+    pub edges: Option<Vec<CharacterEdge>>,
+}
+
+#[derive(Deserialize, Serialize, Debug, Clone)]
+pub struct StaffNode {
+    pub id: i32,
+    pub name: Option<PersonName>,
+    pub image: Option<PersonImage>,
+}
+
+#[derive(Deserialize, Serialize, Debug, Clone)]
+pub struct StaffEdge {
+    pub role: Option<String>,
+    pub node: Option<StaffNode>,
+}
+
+#[derive(Deserialize, Serialize, Debug, Clone)]
+pub struct StaffConnection {
+    pub edges: Option<Vec<StaffEdge>>,
+}
+
+#[derive(Deserialize, Serialize, Debug, Clone)]
+pub struct RecommendationMedia {
+    pub id: i32,
+    pub r#type: Option<String>,
+    pub title: Title,
+    #[serde(rename = "coverImage")]
+    pub cover_image: CoverImage,
+    pub format: Option<String>,
+    #[serde(rename = "averageScore")]
+    pub average_score: Option<i32>,
+}
+
+#[derive(Deserialize, Serialize, Debug, Clone)]
+pub struct RecommendationNode {
+    #[serde(rename = "mediaRecommendation")]
+    pub media_recommendation: Option<RecommendationMedia>,
+}
+
+#[derive(Deserialize, Serialize, Debug, Clone)]
+pub struct RecommendationConnection {
+    pub nodes: Option<Vec<RecommendationNode>>,
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
@@ -533,4 +630,13 @@ pub struct ActivityPage {
     #[serde(rename = "pageInfo")]
     pub page_info: PageInfo,
     pub activities: Option<Vec<ActivityUnion>>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LikeToggleResult {
+    pub id: i32,
+    #[serde(rename = "likeCount")]
+    pub like_count: i32,
+    #[serde(rename = "isLiked")]
+    pub is_liked: bool,
 }

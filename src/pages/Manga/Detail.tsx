@@ -34,6 +34,7 @@ export default function MangaDetail() {
       mediaType="manga"
       progressLabel="Chapter"
       progressTotal={manga?.chapters}
+      volumesTotal={manga?.volumes}
       meta={[
         manga?.chapters && `${manga.chapters} chapters`,
         manga?.volumes && `${manga.volumes} volumes`,

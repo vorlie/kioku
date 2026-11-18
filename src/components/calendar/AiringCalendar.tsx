@@ -1,7 +1,9 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { CalendarDays } from "lucide-react";
+import { CalendarDays, ListFilter } from "lucide-react";
 import { AiringSchedule } from "../../types/anilist";
+import { useAuth } from "../../hooks/useAuth";
+import { useAnimeList } from "../../hooks/useAniList";
 import PageHeader from "../layout/PageHeader";
 
 interface AiringCalendarProps {
@@ -35,11 +37,16 @@ function formatCountdown(seconds: number): string {
   return `in ${Math.max(1, minutes)}m`;
 }
 
-function formatDate(date: Date): string {
-  return date.toLocaleDateString(undefined, {
+function formatDateTime(date: Date): string {
+  const datePart = date.toLocaleDateString(undefined, {
     month: "short",
     day: "numeric",
   });
+  const timePart = date.toLocaleTimeString(undefined, {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  return `${datePart} · ${timePart}`;
 }
 
 function isSameDate(a: Date, b: Date): boolean {
@@ -55,12 +62,25 @@ export default function AiringCalendar({
   isLoading,
 }: AiringCalendarProps) {
   const today = new Date();
+  const { isAuthenticated } = useAuth();
+  const { list: animeList } = useAnimeList(undefined, isAuthenticated);
+  const [myListOnly, setMyListOnly] = useState(false);
 
   const [selectedDate, setSelectedDate] = useState<Date>(() => {
     const date = new Date();
     date.setHours(0, 0, 0, 0);
     return date;
   });
+
+  const myAnimeIds = useMemo(() => {
+    const ids = new Set<number>();
+    for (const entry of animeList) {
+      if (entry.status === "CURRENT" || entry.status === "PLANNING" || entry.status === "REPEATING") {
+        ids.add(entry.mediaId);
+      }
+    }
+    return ids;
+  }, [animeList]);
 
   /*
    * Build the seven days from the schedule itself.
@@ -81,11 +101,12 @@ export default function AiringCalendar({
   const filteredItems = useMemo(() => {
     return schedules
       .filter((item) => {
+        if (myListOnly && !myAnimeIds.has(item.media.id)) return false;
         const airingDate = new Date(item.airingAt * 1000);
         return isSameDate(airingDate, selectedDate);
       })
       .toSorted((a, b) => a.airingAt - b.airingAt);
-  }, [schedules, selectedDate]);
+  }, [myAnimeIds, myListOnly, schedules, selectedDate]);
 
   const selectedDayLabel = selectedDate.toLocaleDateString(undefined, {
     weekday: "long",
@@ -135,6 +156,19 @@ export default function AiringCalendar({
         title="Release Calendar"
         subtitle="Anime airing over the next seven days"
         meta={selectedDayLabel}
+        actions={
+          isAuthenticated ? (
+            <button
+              type="button"
+              className={myListOnly ? "button-primary" : "button-secondary"}
+              aria-pressed={myListOnly}
+              onClick={() => setMyListOnly((prev) => !prev)}
+            >
+              <ListFilter size={16} aria-hidden="true" />
+              My List Only
+            </button>
+          ) : undefined
+        }
       />
 
       <div className="calendar-days" role="tablist">
@@ -268,7 +302,7 @@ export default function AiringCalendar({
                     </div>
 
                     <div className="calendar-card__date">
-                      {formatDate(airingDate)}
+                      {formatDateTime(airingDate)}
                     </div>
                   </div>
                 </Link>
