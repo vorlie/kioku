@@ -36,7 +36,7 @@ pub struct MediaListEntry {
     #[serde(rename = "progressVolumes")]
     pub progress_volumes: Option<i32>,
     pub repeat: Option<i32>,
-    pub priority: Option<String>,
+    pub priority: Option<i32>,
     pub notes: Option<String>,
     #[serde(rename = "startedAt")]
     pub started_at: Option<FuzzyDate>,
