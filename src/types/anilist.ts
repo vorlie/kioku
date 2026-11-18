@@ -32,7 +32,7 @@ export interface MediaListEntry {
   progress?: number;
   progressVolumes?: number;
   repeat?: number;
-  priority?: string;
+  priority?: number;
   notes?: string;
   startedAt?: FuzzyDate;
   completedAt?: FuzzyDate;
