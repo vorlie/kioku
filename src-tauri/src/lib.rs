@@ -18,12 +18,6 @@ use tauri::Manager;
 // Global state for auth server
 struct AuthServerState(Mutex<Option<AuthServer>>);
 
-// Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-#[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
-}
-
 #[tauri::command]
 async fn start_auth_server(
     state: tauri::State<'_, AuthServerState>,
@@ -68,10 +62,6 @@ async fn login(app: tauri::AppHandle, access_token: String) -> Result<(), error:
     eprintln!(
         "Login command called with token length: {}",
         access_token.len()
-    );
-    eprintln!(
-        "Token prefix: {}",
-        &access_token[..access_token.len().min(10)]
     );
 
     let session = auth::AniListSession {
@@ -153,6 +143,7 @@ async fn get_user_list(
 }
 
 #[tauri::command]
+#[allow(clippy::too_many_arguments)]
 async fn update_entry(
     app: tauri::AppHandle,
     media_id: i32,
@@ -219,6 +210,7 @@ async fn popular_anime(
 }
 
 #[tauri::command]
+#[allow(clippy::too_many_arguments)]
 async fn discover_media(
     app: tauri::AppHandle,
     media_type: String,
@@ -334,7 +326,6 @@ pub fn run() {
         .manage(AniListState::new())
         .manage(playback::PlaybackState::new())
         .invoke_handler(tauri::generate_handler![
-            greet,
             start_auth_server,
             check_auth_token,
             stop_auth_server,

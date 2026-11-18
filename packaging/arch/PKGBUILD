@@ -11,8 +11,8 @@
 # regenerate the metadata with `makepkg --printsrcinfo > .SRCINFO`.
 
 pkgname=kioku-for-anilist
-pkgver=0.2.0
-pkgrel=2
+pkgver=0.3.0
+pkgrel=1
 pkgdesc="A polished, modern desktop client for managing your AniList anime and manga libraries"
 arch=('x86_64' 'aarch64')
 url="https://github.com/vorlie/kioku"
@@ -36,7 +36,7 @@ makedepends=('cargo' 'nodejs' 'npm' 'pkgconf' 'rust')
 # handles its own LTO through Cargo, so the C-level flag is not needed here.
 options=('!lto')
 source=("$pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz")
-sha256sums=('971c7a1f3d79bbc0e87b563aee7361c586b520ceabb9a2aafa602b4d5cb66867')
+sha256sums=('SKIP')
 
 _workspace="kioku-$pkgver"
 
