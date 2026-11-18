@@ -105,7 +105,8 @@ export default function Playback() {
   const [playbackRate, setPlaybackRate] = useState(1);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [controlsVisible, setControlsVisible] = useState(true);
-  const [subtitlesEnabled, setSubtitlesEnabled] = useState(true);
+  const [selectedSubtitleIndex, setSelectedSubtitleIndex] = useState<number>(0);
+  const [lastActiveSubtitleIndex, setLastActiveSubtitleIndex] = useState<number>(0);
   const [hudMessage, setHudMessage] = useState<string | null>(null);
 
   const initialQuery =
@@ -224,14 +225,63 @@ export default function Playback() {
     });
   }, [selectedEpisode, episodes.length]);
 
-  useEffect(() => {
+  function applySubtitleTrackModes(activeIdx = selectedSubtitleIndex) {
     const video = videoRef.current;
     if (!video) return;
     for (let i = 0; i < video.textTracks.length; i++) {
-      video.textTracks[i].mode =
-        subtitlesEnabled && i === 0 ? "showing" : "disabled";
+      video.textTracks[i].mode = i === activeIdx ? "showing" : "disabled";
     }
-  }, [subtitlesEnabled, selectedStream]);
+  }
+
+  useEffect(() => {
+    const subs = selectedStream?.subtitles ?? [];
+    if (subs.length === 0) {
+      setSelectedSubtitleIndex(-1);
+      return;
+    }
+    const defaultIdx = subs.findIndex((s) => s.default);
+    const initialIdx = defaultIdx >= 0 ? defaultIdx : 0;
+    setSelectedSubtitleIndex(initialIdx);
+    setLastActiveSubtitleIndex(initialIdx);
+  }, [selectedStream]);
+
+  useEffect(() => {
+    applySubtitleTrackModes(selectedSubtitleIndex);
+  }, [selectedSubtitleIndex, selectedStream]);
+
+  function selectSubtitleTrack(index: number) {
+    setSelectedSubtitleIndex(index);
+    if (index >= 0) {
+      setLastActiveSubtitleIndex(index);
+      const label =
+        selectedStream?.subtitles?.[index]?.label || `Track ${index + 1}`;
+      showHud(`Subtitles: ${label}`);
+    } else {
+      showHud("Subtitles: Off");
+    }
+  }
+
+  function toggleSubtitlesQuick() {
+    const subs = selectedStream?.subtitles ?? [];
+    if (subs.length === 0) return;
+    if (selectedSubtitleIndex >= 0) {
+      selectSubtitleTrack(-1);
+    } else {
+      const target =
+        lastActiveSubtitleIndex >= 0 && lastActiveSubtitleIndex < subs.length
+          ? lastActiveSubtitleIndex
+          : 0;
+      selectSubtitleTrack(target);
+    }
+  }
+
+  function cycleSubtitleTrack() {
+    const subs = selectedStream?.subtitles ?? [];
+    if (subs.length === 0) return;
+    const next =
+      selectedSubtitleIndex + 1 >= subs.length ? -1 : selectedSubtitleIndex + 1;
+    selectSubtitleTrack(next);
+  }
 
   function togglePlayPause() {
     const video = videoRef.current;
@@ -350,6 +400,11 @@ export default function Playback() {
           event.preventDefault();
           toggleMute();
           break;
+        case "c":
+        case "C":
+          event.preventDefault();
+          cycleSubtitleTrack();
+          break;
         case " ":
         case "k":
         case "K":
@@ -376,7 +431,7 @@ export default function Playback() {
 
     window.addEventListener("keydown", handlePlayerKeyDown);
     return () => window.removeEventListener("keydown", handlePlayerKeyDown);
-  }, [selectedStream, volume, muted, episodes, selectedEpisode]);
+  }, [selectedStream, volume, muted, episodes, selectedEpisode, selectedSubtitleIndex]);
 
   async function handleSearch(nextQuery = query, nextTranslation = translation) {
     const trimmedQuery = nextQuery.trim();
@@ -677,6 +732,7 @@ export default function Playback() {
     const handleLoadedMetadata = () => {
       const dur = Number(video.duration);
       if (Number.isFinite(dur) && dur > 0) setDuration(dur);
+      applySubtitleTrackModes();
     };
 
     video.addEventListener("timeupdate", handleTimeUpdate);
@@ -983,18 +1039,38 @@ export default function Playback() {
 
                   <div className="playback-controls__group">
                     {selectedStream.subtitles.length > 0 && (
-                      <button
-                        type="button"
-                        className={`playback-controls__pill ${
-                          subtitlesEnabled ? "playback-controls__pill--active" : ""
-                        }`}
-                        onClick={() => setSubtitlesEnabled((v) => !v)}
-                        aria-pressed={subtitlesEnabled}
-                        title="Toggle Subtitles"
-                      >
-                        <Captions size={14} aria-hidden="true" />
-                        CC
-                      </button>
+                      <div className="playback-controls__subtitles">
+                        <button
+                          type="button"
+                          className={`playback-controls__pill ${
+                            selectedSubtitleIndex >= 0
+                              ? "playback-controls__pill--active"
+                              : ""
+                          }`}
+                          onClick={toggleSubtitlesQuick}
+                          aria-pressed={selectedSubtitleIndex >= 0}
+                          title="Toggle Subtitles (C to cycle)"
+                        >
+                          <Captions size={14} aria-hidden="true" />
+                          CC
+                        </button>
+
+                        <select
+                          className="playback-controls__select"
+                          aria-label="Subtitle track"
+                          value={selectedSubtitleIndex}
+                          onChange={(e) =>
+                            selectSubtitleTrack(Number(e.target.value))
+                          }
+                        >
+                          <option value={-1}>Subtitles: Off</option>
+                          {selectedStream.subtitles.map((sub, idx) => (
+                            <option key={`${sub.url}-${idx}`} value={idx}>
+                              {sub.label || `Track ${idx + 1}`}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
                     )}
 
                     <button
@@ -1110,6 +1186,27 @@ export default function Playback() {
                             ? ` · CC ${s.subtitles.length}`
                             : ""}
                           )
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {selectedStream && selectedStream.subtitles.length > 0 && (
+                  <div className="playback__source-selector">
+                    <span className="playback__source-label">Subtitles</span>
+                    <select
+                      className="form-select playback__source-select"
+                      aria-label="Select subtitle track"
+                      value={selectedSubtitleIndex}
+                      onChange={(e) =>
+                        selectSubtitleTrack(Number(e.target.value))
+                      }
+                    >
+                      <option value={-1}>Off</option>
+                      {selectedStream.subtitles.map((sub, idx) => (
+                        <option key={`${sub.url}-${idx}`} value={idx}>
+                          {sub.label || `Track ${idx + 1}`}
                         </option>
                       ))}
                     </select>
@@ -1416,8 +1513,8 @@ export default function Playback() {
               <div className="playback__shortcuts-hint">
                 <span>
                   <kbd>Space</kbd> Play · <kbd>S</kbd> +85s · <kbd>←</kbd>/
-                  <kbd>→</kbd> ±5s · <kbd>N</kbd>/<kbd>P</kbd> Ep ·{" "}
-                  <kbd>F</kbd> Fullscreen
+                  <kbd>→</kbd> ±5s · <kbd>C</kbd> Subtitles · <kbd>N</kbd>/
+                  <kbd>P</kbd> Ep · <kbd>F</kbd> Fullscreen
                 </span>
               </div>
             </section>

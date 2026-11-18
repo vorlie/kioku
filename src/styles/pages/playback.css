@@ -319,6 +319,12 @@
   gap: 4px;
 }
 
+.playback-controls__subtitles {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .playback-controls__volume-slider {
   width: 68px;
   height: 4px;
