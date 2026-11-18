@@ -31,7 +31,12 @@ export default function Playback() {
     const {updateEntry} = useUpdateEntry();
 
     const [query, setQuery] = useState("");
-    const [translation, setTranslation] = useState<TranslationType>("sub");
+    const [translation, setTranslation] = useState<TranslationType>(
+        () => localStorage.getItem("playback-audio-preference") === "dub" ? "dub" : "sub",
+    );
+    const [autoPlayFromWatchNow] = useState(
+        () => localStorage.getItem("playback-auto-play") !== "false",
+    );
 
     const [results, setResults] = useState<SearchResult[]>([]);
     const [episodes, setEpisodes] = useState<string[]>([]);
@@ -60,14 +65,6 @@ export default function Playback() {
             ? Number(location.state.mediaId)
             : null;
 
-    const initialProgress =
-        typeof location.state === "object" &&
-        location.state !== null &&
-        "currentProgress" in location.state &&
-        Number.isFinite(Number(location.state.currentProgress))
-            ? Number(location.state.currentProgress)
-            : 0;
-
     const [manualLinkedId, setManualLinkedId] = useState<number | null>(null);
     const [linkSearchQuery, setLinkSearchQuery] = useState("");
     const [showLinkPicker, setShowLinkPicker] = useState(false);
@@ -83,6 +80,13 @@ export default function Playback() {
         location.state !== null &&
         "mediaType" in location.state
             ? String(location.state.mediaType)
+            : null;
+
+    const linkedEpisode =
+        typeof location.state === "object" &&
+        location.state !== null &&
+        "episode" in location.state
+            ? Number(location.state.episode)
             : null;
 
     const hasAniListLink =
@@ -205,10 +209,31 @@ export default function Playback() {
             if (requestId !== requestIdRef.current) return;
 
             setResults(result);
-            setSelectedShow(null);
-            setEpisodes([]);
-            setStreams([]);
-            setSelectedStream(null);
+            const episodeToSelect =
+                linkedEpisode !== null &&
+                Number.isInteger(linkedEpisode) &&
+                linkedEpisode > 0
+                    ? linkedEpisode
+                    : null;
+            const exactMatch = autoPlayFromWatchNow
+                ? result.find(
+                    (show) =>
+                        show.name.trim().replace(/\s+/g, " ").toLowerCase() ===
+                        trimmedQuery.replace(/\s+/g, " ").toLowerCase(),
+                )
+                : null;
+            const showToOpen = autoPlayFromWatchNow
+                ? exactMatch ??
+                    (episodeToSelect !== null && result.length === 1 ? result[0] : null)
+                : null;
+            if (showToOpen) {
+                void handleSelectShow(showToOpen, episodeToSelect);
+            } else {
+                setSelectedShow(null);
+                setEpisodes([]);
+                setStreams([]);
+                setSelectedStream(null);
+            }
         } catch (error) {
             if (requestId === requestIdRef.current) setError(String(error));
         } finally {
@@ -216,7 +241,10 @@ export default function Playback() {
         }
     }
 
-    async function handleSelectShow(show: SearchResult) {
+    async function handleSelectShow(
+        show: SearchResult,
+        episodeToSelect: number | null = null,
+    ) {
         const requestId = ++requestIdRef.current;
         completionSyncRef.current = null;
         setSelectedShow(show);
@@ -236,16 +264,17 @@ export default function Playback() {
             if (requestId !== requestIdRef.current) return;
             setEpisodes(result);
 
-            if (initialProgress > 0 && result.length > 0) {
-                const nextEp = String(initialProgress + 1);
-                const currentEp = String(initialProgress);
-                const targetEp = result.includes(nextEp)
-                    ? nextEp
-                    : result.includes(currentEp)
-                        ? currentEp
-                        : null;
-                if (targetEp) {
-                    await handleLoadStreams(targetEp);
+            const episode = episodeToSelect === null
+                ? undefined
+                : result.find((item) => {
+                    const match = item.match(/^episode\s+(\d+)$/i) ?? item.match(/^\s*(\d+)\s*$/);
+                    return match ? Number(match[1]) === episodeToSelect : false;
+                }) ?? result[episodeToSelect - 1];
+            if (episode) {
+                if (autoPlayFromWatchNow) {
+                    await handleLoadStreams(episode, show);
+                } else {
+                    setSelectedEpisode(episode);
                 }
             }
         } catch (error) {
@@ -285,8 +314,8 @@ export default function Playback() {
         }
     }
 
-    async function handleLoadStreams(episode = selectedEpisode) {
-        if (!selectedShow || !episode) return;
+    async function handleLoadStreams(episode = selectedEpisode, show = selectedShow) {
+        if (!show || !episode) return;
 
         const requestId = ++requestIdRef.current;
         setLoading(true);
@@ -300,7 +329,7 @@ export default function Playback() {
             if (requestId !== requestIdRef.current) return;
 
             const result = await getPlaybackStreams(
-                selectedShow.id,
+                show.id,
                 episode,
                 translation,
             );

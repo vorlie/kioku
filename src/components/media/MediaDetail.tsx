@@ -319,10 +319,9 @@ export default function MediaDetail<T extends MediaDetailData>({
     navigate("/playback", {
       state: {
         query: title,
-        autoplay: true,
         mediaId: media.id,
         mediaType,
-        currentProgress: progress,
+        ...(mediaType === "anime" ? { episode: progress + 1 } : {}),
       },
     });
   };
