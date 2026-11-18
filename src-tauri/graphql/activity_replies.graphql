@@ -1,0 +1,21 @@
+query ($activityId: Int, $page: Int, $perPage: Int) {
+  Page(page: $page, perPage: $perPage) {
+    activityReplies(activityId: $activityId) {
+      id
+      userId
+      activityId
+      text
+      likeCount
+      isLiked
+      createdAt
+      user {
+        id
+        name
+        avatar {
+          large
+          medium
+        }
+      }
+    }
+  }
+}

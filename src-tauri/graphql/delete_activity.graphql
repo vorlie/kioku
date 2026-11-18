@@ -1,0 +1,5 @@
+mutation ($id: Int) {
+  DeleteActivity(id: $id) {
+    deleted
+  }
+}

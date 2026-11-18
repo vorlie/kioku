@@ -1,13 +1,36 @@
 use crate::auth::AuthManager;
 use crate::error::{AppError, Result};
 use crate::models::{
-    ActivityPage, AiringSchedulePage, Media, MediaListEntry, Page, Response, Viewer,
+    ActivityPage, ActivityReply, ActivityUnion, AiringSchedulePage, FuzzyDate, LikeToggleResult,
+    Media, MediaListEntry, Page, Response, Viewer,
 };
-use reqwest::Client;
+use reqwest::{Client, StatusCode};
 use serde::Deserialize;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
+use std::time::Duration;
+use tauri::Manager;
 
 const ANILIST_API_URL: &str = "https://graphql.anilist.co";
+
+pub struct AniListState {
+    pub client: Client,
+    pub viewer_id: Mutex<Option<i32>>,
+}
+
+impl AniListState {
+    pub fn new() -> Self {
+        Self {
+            client: Client::new(),
+            viewer_id: Mutex::new(None),
+        }
+    }
+
+    pub fn clear_viewer_id(&self) {
+        if let Ok(mut guard) = self.viewer_id.lock() {
+            *guard = None;
+        }
+    }
+}
 
 pub struct AniListClient {
     client: Client,
@@ -16,10 +39,32 @@ pub struct AniListClient {
 
 impl AniListClient {
     pub fn new(app_handle: tauri::AppHandle) -> Self {
+        let client = app_handle
+            .try_state::<AniListState>()
+            .map(|state| state.client.clone())
+            .unwrap_or_else(Client::new);
         Self {
-            client: Client::new(),
+            client,
             app_handle: Arc::new(app_handle),
         }
+    }
+
+    pub async fn get_viewer_id(&self) -> Result<i32> {
+        if let Some(state) = self.app_handle.try_state::<AniListState>() {
+            if let Ok(guard) = state.viewer_id.lock() {
+                if let Some(id) = *guard {
+                    return Ok(id);
+                }
+            }
+        }
+
+        let viewer = self.viewer().await?;
+        if let Some(state) = self.app_handle.try_state::<AniListState>() {
+            if let Ok(mut guard) = state.viewer_id.lock() {
+                *guard = Some(viewer.id);
+            }
+        }
+        Ok(viewer.id)
     }
 
     async fn get_auth_token(&self) -> Result<String> {
@@ -33,46 +78,83 @@ impl AniListClient {
         query: &str,
         variables: Option<&serde_json::Value>,
     ) -> Result<T> {
-        let mut request = self
-            .client
-            .post(ANILIST_API_URL)
-            .header("Content-Type", "application/json")
-            .header("Accept", "application/json")
-            .json(&serde_json::json!({
-                "query": query,
-                "variables": variables
-            }));
+        let token = self.get_auth_token().await.ok();
+        let body = serde_json::json!({
+            "query": query,
+            "variables": variables
+        });
 
-        if let Ok(token) = self.get_auth_token().await {
-            request = request.header("Authorization", format!("Bearer {}", token));
+        for attempt in 0..=1 {
+            let mut request = self
+                .client
+                .post(ANILIST_API_URL)
+                .header("Content-Type", "application/json")
+                .header("Accept", "application/json")
+                .json(&body);
+
+            if let Some(ref t) = token {
+                request = request.header("Authorization", format!("Bearer {}", t));
+            }
+
+            let response = request.send().await?;
+            let status = response.status();
+
+            if let Some(remaining) = response
+                .headers()
+                .get("x-ratelimit-remaining")
+                .and_then(|v| v.to_str().ok())
+                .and_then(|v| v.parse::<u32>().ok())
+            {
+                if remaining <= 10 {
+                    eprintln!("AniList rate limit low: {} remaining", remaining);
+                }
+            }
+
+            if status == StatusCode::TOO_MANY_REQUESTS {
+                let retry_after = response
+                    .headers()
+                    .get("retry-after")
+                    .and_then(|v| v.to_str().ok())
+                    .and_then(|v| v.parse::<u64>().ok())
+                    .unwrap_or(2)
+                    .min(10);
+
+                if attempt == 0 {
+                    eprintln!("AniList 429 rate limit; retrying after {}s", retry_after);
+                    tokio::time::sleep(Duration::from_secs(retry_after)).await;
+                    continue;
+                }
+
+                return Err(AppError::AniList(format!(
+                    "AniList rate limit reached. Please wait {} seconds and try again.",
+                    retry_after
+                )));
+            }
+
+            if !status.is_success() {
+                let error_text = response
+                    .text()
+                    .await
+                    .unwrap_or_else(|_| "Unable to read error".to_string());
+                eprintln!("AniList API error response: {}", error_text);
+                return Err(AppError::AniList(format!(
+                    "API request failed with status: {} - {}",
+                    status, error_text
+                )));
+            }
+
+            let response_json: serde_json::Value = response.json().await?;
+
+            if let Some(errors) = response_json.get("errors") {
+                eprintln!("GraphQL errors: {}", errors);
+                return Err(AppError::AniList(format!("GraphQL errors: {}", errors)));
+            }
+
+            return serde_json::from_value(response_json["data"].clone())
+                .map_err(AppError::Serialization);
         }
 
-        let response = request.send().await?;
-
-        // Debug logging
-        let status = response.status();
-        eprintln!("AniList API request status: {}", status);
-
-        if !status.is_success() {
-            let error_text = response
-                .text()
-                .await
-                .unwrap_or_else(|_| "Unable to read error".to_string());
-            eprintln!("AniList API error response: {}", error_text);
-            return Err(AppError::AniList(format!(
-                "API request failed with status: {} - {}",
-                status, error_text
-            )));
-        }
-
-        let response_json: serde_json::Value = response.json().await?;
-
-        if let Some(errors) = response_json.get("errors") {
-            eprintln!("GraphQL errors: {}", errors);
-            return Err(AppError::AniList(format!("GraphQL errors: {}", errors)));
-        }
-
-        serde_json::from_value(response_json["data"].clone()).map_err(AppError::Serialization)
+        Err(AppError::AniList("AniList request failed".to_string()))
     }
 
     pub async fn viewer(&self) -> Result<Viewer> {
@@ -196,8 +278,7 @@ impl AniListClient {
         media_type: &str,
         status: Option<&str>,
     ) -> Result<Vec<MediaListEntry>> {
-        let viewer = self.viewer().await?;
-        let viewer_id = viewer.id;
+        let viewer_id = self.get_viewer_id().await?;
 
         // Map our status values to AniList enum values
         let anilist_status = match status {
@@ -242,11 +323,12 @@ impl AniListClient {
                 status: entry.status,
                 score: entry.score,
                 progress: entry.progress,
+                progress_volumes: entry.progress_volumes,
                 repeat: entry.repeat,
                 priority: None,
                 notes: entry.notes,
-                started_at: None,
-                completed_at: None,
+                started_at: entry.started_at,
+                completed_at: entry.completed_at,
                 updated_at: entry.updated_at,
                 created_at: None,
                 media: entry.media,
@@ -262,7 +344,11 @@ impl AniListClient {
         status: Option<&str>,
         score: Option<f64>,
         progress: Option<i32>,
+        progress_volumes: Option<i32>,
+        repeat: Option<i32>,
         notes_val: Option<&str>,
+        started_at: Option<FuzzyDate>,
+        completed_at: Option<FuzzyDate>,
     ) -> Result<MediaListEntry> {
         const QUERY: &str = include_str!("../../graphql/update_entry_by_media.graphql");
 
@@ -282,8 +368,20 @@ impl AniListClient {
         if let Some(p) = progress {
             variables["progress"] = serde_json::json!(p);
         }
+        if let Some(pv) = progress_volumes {
+            variables["progressVolumes"] = serde_json::json!(pv);
+        }
+        if let Some(r) = repeat {
+            variables["repeat"] = serde_json::json!(r);
+        }
         if let Some(n) = notes_val {
             variables["notes"] = serde_json::Value::String(n.to_string());
+        }
+        if let Some(d) = started_at {
+            variables["startedAt"] = serde_json::json!(d);
+        }
+        if let Some(d) = completed_at {
+            variables["completedAt"] = serde_json::json!(d);
         }
 
         let response: Response = self.execute_query(QUERY, Some(&variables)).await?;
@@ -334,6 +432,99 @@ impl AniListClient {
         Ok(response.page)
     }
 
+    pub async fn discover_media(
+        &self,
+        media_type: &str,
+        search: Option<&str>,
+        genre: Option<&str>,
+        season_year: Option<i32>,
+        season: Option<&str>,
+        format: Option<&str>,
+        status: Option<&str>,
+        sort: Option<&str>,
+        page: Option<i32>,
+        per_page: Option<i32>,
+    ) -> Result<Page<Media>> {
+        const QUERY: &str = include_str!("../../graphql/discover_media.graphql");
+
+        #[derive(Deserialize)]
+        struct Response {
+            #[serde(rename = "Page")]
+            page: Page<Media>,
+        }
+
+        let mut variables = serde_json::json!({
+            "type": media_type,
+            "page": page.unwrap_or(1),
+            "perPage": per_page.unwrap_or(20),
+        });
+
+        if let Some(s) = search.filter(|v| !v.trim().is_empty()) {
+            variables["search"] = serde_json::Value::String(s.to_string());
+        }
+        if let Some(g) = genre.filter(|v| !v.trim().is_empty()) {
+            variables["genre"] = serde_json::Value::String(g.to_string());
+        }
+        if let Some(y) = season_year {
+            variables["seasonYear"] = serde_json::json!(y);
+        }
+        if let Some(se) = season.filter(|v| !v.trim().is_empty()) {
+            variables["season"] = serde_json::Value::String(se.to_string());
+        }
+        if let Some(f) = format.filter(|v| !v.trim().is_empty()) {
+            variables["format"] = serde_json::Value::String(f.to_string());
+        }
+        if let Some(st) = status.filter(|v| !v.trim().is_empty()) {
+            variables["status"] = serde_json::Value::String(st.to_string());
+        }
+        if let Some(so) = sort.filter(|v| !v.trim().is_empty()) {
+            variables["sort"] = serde_json::json!([so]);
+        }
+
+        let response: Response = self.execute_query(QUERY, Some(&variables)).await?;
+        Ok(response.page)
+    }
+
+    pub async fn toggle_favourite(&self, media_id: i32, media_type: &str) -> Result<bool> {
+        const QUERY: &str = include_str!("../../graphql/toggle_favourite.graphql");
+
+        #[derive(Deserialize)]
+        struct FavouritesPayload {
+            anime: Option<FavouriteNodes>,
+            manga: Option<FavouriteNodes>,
+        }
+
+        #[derive(Deserialize)]
+        struct FavouriteNodes {
+            nodes: Option<Vec<IdOnly>>,
+        }
+
+        #[derive(Deserialize)]
+        struct IdOnly {
+            id: i32,
+        }
+
+        #[derive(Deserialize)]
+        struct Response {
+            #[serde(rename = "ToggleFavourite")]
+            toggle_favourite: FavouritesPayload,
+        }
+
+        let variables = if media_type.eq_ignore_ascii_case("MANGA") {
+            serde_json::json!({ "mangaId": media_id })
+        } else {
+            serde_json::json!({ "animeId": media_id })
+        };
+
+        let response: Response = self.execute_query(QUERY, Some(&variables)).await?;
+        let nodes = if media_type.eq_ignore_ascii_case("MANGA") {
+            response.toggle_favourite.manga.and_then(|m| m.nodes)
+        } else {
+            response.toggle_favourite.anime.and_then(|a| a.nodes)
+        };
+        Ok(nodes.unwrap_or_default().iter().any(|n| n.id == media_id))
+    }
+
     pub async fn delete_entry(&self, entry_id: i32) -> Result<bool> {
         const QUERY: &str = include_str!("../../graphql/delete_entry.graphql");
 
@@ -355,13 +546,11 @@ impl AniListClient {
 
     pub async fn user_activities(
         &self,
+        scope: Option<&str>,
+        type_in: Option<Vec<String>>,
         page: Option<i32>,
         per_page: Option<i32>,
     ) -> Result<ActivityPage> {
-        // First get the viewer ID
-        let viewer = self.viewer().await?;
-        let viewer_id = viewer.id;
-
         const QUERY: &str = include_str!("../../graphql/user_activities.graphql");
 
         #[derive(Deserialize)]
@@ -370,15 +559,144 @@ impl AniListClient {
             page: ActivityPage,
         }
 
-        let variables = serde_json::json!({
-            "userId": viewer_id,
+        let mut variables = serde_json::json!({
             "page": page.unwrap_or(1),
             "perPage": per_page.unwrap_or(20)
         });
 
-        eprintln!("Fetching activities for user ID: {}", viewer_id);
+        match scope.unwrap_or("personal") {
+            "following" => {
+                variables["isFollowing"] = serde_json::json!(true);
+            }
+            "global" => {}
+            _ => {
+                let viewer_id = self.get_viewer_id().await?;
+                variables["userId"] = serde_json::json!(viewer_id);
+            }
+        }
+
+        if let Some(types) = type_in.filter(|t| !t.is_empty()) {
+            variables["typeIn"] = serde_json::json!(types);
+        }
+
         let response: Response = self.execute_query(QUERY, Some(&variables)).await?;
-        eprintln!("Fetched activities: {:?}", response.page);
         Ok(response.page)
+    }
+
+    pub async fn activity_replies(
+        &self,
+        activity_id: i32,
+        page: Option<i32>,
+        per_page: Option<i32>,
+    ) -> Result<Vec<ActivityReply>> {
+        const QUERY: &str = include_str!("../../graphql/activity_replies.graphql");
+
+        #[derive(Deserialize)]
+        struct RepliesPage {
+            #[serde(rename = "activityReplies")]
+            activity_replies: Option<Vec<ActivityReply>>,
+        }
+
+        #[derive(Deserialize)]
+        struct Response {
+            #[serde(rename = "Page")]
+            page: RepliesPage,
+        }
+
+        let variables = serde_json::json!({
+            "activityId": activity_id,
+            "page": page.unwrap_or(1),
+            "perPage": per_page.unwrap_or(25),
+        });
+
+        let response: Response = self.execute_query(QUERY, Some(&variables)).await?;
+        Ok(response.page.activity_replies.unwrap_or_default())
+    }
+
+    pub async fn toggle_like(&self, id: i32, like_type: &str) -> Result<LikeToggleResult> {
+        const QUERY: &str = include_str!("../../graphql/toggle_like.graphql");
+
+        #[derive(Deserialize)]
+        struct Response {
+            #[serde(rename = "ToggleLikeV2")]
+            toggle_like: LikeToggleResult,
+        }
+
+        let variables = serde_json::json!({
+            "id": id,
+            "type": like_type,
+        });
+
+        let response: Response = self.execute_query(QUERY, Some(&variables)).await?;
+        Ok(response.toggle_like)
+    }
+
+    pub async fn save_text_activity(&self, text: &str) -> Result<ActivityUnion> {
+        const QUERY: &str = include_str!("../../graphql/save_text_activity.graphql");
+
+        #[derive(Deserialize)]
+        struct Response {
+            #[serde(rename = "SaveTextActivity")]
+            save_text_activity: ActivityUnion,
+        }
+
+        let variables = serde_json::json!({ "text": text });
+        let response: Response = self.execute_query(QUERY, Some(&variables)).await?;
+        Ok(response.save_text_activity)
+    }
+
+    pub async fn save_activity_reply(&self, activity_id: i32, text: &str) -> Result<ActivityReply> {
+        const QUERY: &str = include_str!("../../graphql/save_activity_reply.graphql");
+
+        #[derive(Deserialize)]
+        struct Response {
+            #[serde(rename = "SaveActivityReply")]
+            save_activity_reply: ActivityReply,
+        }
+
+        let variables = serde_json::json!({
+            "activityId": activity_id,
+            "text": text,
+        });
+        let response: Response = self.execute_query(QUERY, Some(&variables)).await?;
+        Ok(response.save_activity_reply)
+    }
+
+    pub async fn delete_activity(&self, id: i32) -> Result<bool> {
+        const QUERY: &str = include_str!("../../graphql/delete_activity.graphql");
+
+        #[derive(Deserialize)]
+        struct DeletePayload {
+            deleted: bool,
+        }
+
+        #[derive(Deserialize)]
+        struct Response {
+            #[serde(rename = "DeleteActivity")]
+            delete_activity: DeletePayload,
+        }
+
+        let variables = serde_json::json!({ "id": id });
+        let response: Response = self.execute_query(QUERY, Some(&variables)).await?;
+        Ok(response.delete_activity.deleted)
+    }
+
+    pub async fn delete_activity_reply(&self, id: i32) -> Result<bool> {
+        const QUERY: &str = include_str!("../../graphql/delete_activity_reply.graphql");
+
+        #[derive(Deserialize)]
+        struct DeletePayload {
+            deleted: bool,
+        }
+
+        #[derive(Deserialize)]
+        struct Response {
+            #[serde(rename = "DeleteActivityReply")]
+            delete_activity_reply: DeletePayload,
+        }
+
+        let variables = serde_json::json!({ "id": id });
+        let response: Response = self.execute_query(QUERY, Some(&variables)).await?;
+        Ok(response.delete_activity_reply.deleted)
     }
 }

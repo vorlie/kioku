@@ -1,10 +1,12 @@
 import { useNavigate } from "react-router-dom";
-import { Star } from "lucide-react";
+import { Play, Plus, Star } from "lucide-react";
+import { useUpdateEntry } from "../../hooks/useAniList";
 import type { Media, MediaListEntry } from "../../types/anilist";
 
 interface MediaCardProps {
   media?: Media;
   entry?: MediaListEntry;
+  listStatus?: string;
   mediaType?: "anime" | "manga";
   viewMode?: "grid" | "compact";
 }
@@ -12,10 +14,12 @@ interface MediaCardProps {
 export default function MediaCard({
   media,
   entry,
+  listStatus,
   mediaType = "anime",
   viewMode = "grid",
 }: MediaCardProps) {
   const navigate = useNavigate();
+  const { updateEntry, isLoading: isUpdating } = useUpdateEntry();
 
   const mediaData = media || entry?.media;
 
@@ -48,7 +52,7 @@ export default function MediaCard({
     ? Math.min((progress / totalItems!) * 100, 100)
     : 0;
 
-  const status = entry?.status;
+  const status = entry?.status ?? listStatus;
 
   const score =
     typeof mediaData.averageScore === "number"
@@ -68,23 +72,31 @@ export default function MediaCard({
         autoplay: true,
         mediaId: mediaData.id,
         mediaType,
+        currentProgress: progress,
       },
     });
   };
 
+  const canIncrement = Boolean(entry) && (!hasTotal || progress < (totalItems ?? 0));
+
+  const handleQuickIncrement = async (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    if (!entry || isUpdating || !canIncrement) return;
+    await updateEntry({
+      mediaId: entry.mediaId ?? mediaData.id,
+      progress: progress + 1,
+    });
+  };
+
   return (
-    <article
-      className={`media-card media-card--${viewMode}`}
-      onClick={handleClick}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(event) => {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          handleClick();
-        }
-      }}
-    >
+    <article className={`media-card media-card--${viewMode}`}>
+      <button
+        type="button"
+        className="media-card__trigger"
+        onClick={handleClick}
+        aria-label={`View details for ${title}`}
+      />
+
       <div className="media-card__cover">
         {coverImage ? (
           <img
@@ -99,15 +111,17 @@ export default function MediaCard({
           </div>
         )}
 
-        <button
-          type="button"
-          className="media-card__watch-button"
-          onClick={handleWatchNow}
-          aria-label={`Watch ${title} now`}
-          title={`Watch ${title} now`}
-        >
-          <span aria-hidden="true">▶</span>
-        </button>
+        {mediaType === "anime" && (
+          <button
+            type="button"
+            className="media-card__watch-button"
+            onClick={handleWatchNow}
+            aria-label={`Watch ${title} now`}
+            title={`Watch ${title} now`}
+          >
+            <Play size={12} fill="currentColor" aria-hidden="true" />
+          </button>
+        )}
 
         {viewMode === "grid" && status && (
           <span className="media-card__status">
@@ -132,7 +146,7 @@ export default function MediaCard({
             {title}
           </h3>
 
-          {hasProgress && (
+          {(hasProgress || entry) && (
             <div className="media-card__progress">
               <div className="media-card__progress-label">
                 <span>
@@ -141,21 +155,38 @@ export default function MediaCard({
                   {hasTotal && ` / ${totalItems}`}
                 </span>
 
-                {hasTotal && (
-                  <span>
-                    {Math.round(progressPercent)}%
-                  </span>
-                )}
+                <div className="media-card__progress-actions">
+                  {hasTotal && (
+                    <span>
+                      {Math.round(progressPercent)}%
+                    </span>
+                  )}
+
+                  {canIncrement && (
+                    <button
+                      type="button"
+                      className="media-card__increment"
+                      onClick={handleQuickIncrement}
+                      disabled={isUpdating}
+                      aria-label={`Increment ${title} progress`}
+                      title={`+1 ${mediaType === "manga" ? "chapter" : "episode"}`}
+                    >
+                      <Plus size={11} aria-hidden="true" />1
+                    </button>
+                  )}
+                </div>
               </div>
 
-              <div className="media-card__progress-track">
-                <div
-                  className="media-card__progress-bar"
-                  style={{
-                    width: `${progressPercent}%`,
-                  }}
-                />
-              </div>
+              {hasTotal && (
+                <div className="media-card__progress-track">
+                  <div
+                    className="media-card__progress-bar"
+                    style={{
+                      width: `${progressPercent}%`,
+                    }}
+                  />
+                </div>
+              )}
             </div>
           )}
         </div>

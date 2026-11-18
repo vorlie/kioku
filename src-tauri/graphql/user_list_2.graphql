@@ -9,8 +9,19 @@ query ($userId: Int, $type: MediaType) {
         status
         score
         progress
+        progressVolumes
         repeat
         notes
+        startedAt {
+          year
+          month
+          day
+        }
+        completedAt {
+          year
+          month
+          day
+        }
         updatedAt
         media {
           id

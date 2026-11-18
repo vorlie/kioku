@@ -1,10 +1,18 @@
 
 ::-webkit-scrollbar {
-    background: transparent;
-    width: 0;
-    height: 0;
+    width: 6px;
+    height: 6px;
 }
 
 ::-webkit-scrollbar-track {
     background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border-strong);
+    border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
 }

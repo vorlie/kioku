@@ -1,0 +1,19 @@
+mutation ($activityId: Int, $text: String) {
+  SaveActivityReply(activityId: $activityId, text: $text) {
+    id
+    userId
+    activityId
+    text
+    likeCount
+    isLiked
+    createdAt
+    user {
+      id
+      name
+      avatar {
+        large
+        medium
+      }
+    }
+  }
+}

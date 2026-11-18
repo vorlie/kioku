@@ -1,10 +1,11 @@
 import {useEffect, useRef, useState} from "react";
-import {ArrowLeft, ChevronLeft, ChevronRight, Play} from "lucide-react";
+import {AlertCircle, ArrowLeft, ChevronLeft, ChevronRight, Play, Search} from "lucide-react";
 import {useLocation} from "react-router-dom";
 import Hls from "hls.js";
 
 import PageHeader from "../../components/layout/PageHeader";
-import {useUpdateEntry} from "../../hooks/useAniList";
+import { useAuth } from "../../hooks/useAuth";
+import { useSearchAnime, useUpdateEntry } from "../../hooks/useAniList";
 
 import {
     getPlaybackEpisodes,
@@ -26,6 +27,7 @@ export default function Playback() {
     const hlsRef = useRef<Hls | null>(null);
     const requestIdRef = useRef(0);
     const playbackCommandRef = useRef<Promise<void>>(Promise.resolve());
+    const {isAuthenticated} = useAuth();
     const {updateEntry} = useUpdateEntry();
 
     const [query, setQuery] = useState("");
@@ -58,6 +60,24 @@ export default function Playback() {
             ? Number(location.state.mediaId)
             : null;
 
+    const initialProgress =
+        typeof location.state === "object" &&
+        location.state !== null &&
+        "currentProgress" in location.state &&
+        Number.isFinite(Number(location.state.currentProgress))
+            ? Number(location.state.currentProgress)
+            : 0;
+
+    const [manualLinkedId, setManualLinkedId] = useState<number | null>(null);
+    const [linkSearchQuery, setLinkSearchQuery] = useState("");
+    const [showLinkPicker, setShowLinkPicker] = useState(false);
+    const {results: linkSearchResults} = useSearchAnime(showLinkPicker ? linkSearchQuery : "");
+
+    const effectiveMediaId =
+        Number.isFinite(linkedMediaId) && linkedMediaId !== null && linkedMediaId > 0
+            ? linkedMediaId
+            : manualLinkedId;
+
     const linkedMediaType =
         typeof location.state === "object" &&
         location.state !== null &&
@@ -66,7 +86,7 @@ export default function Playback() {
             : null;
 
     const hasAniListLink =
-        Number.isFinite(linkedMediaId) && linkedMediaId !== null && linkedMediaId > 0;
+        Number.isFinite(effectiveMediaId) && effectiveMediaId !== null && effectiveMediaId > 0;
 
     function queuePlaybackCommand<T>(command: () => Promise<T>): Promise<T> {
         const commandPromise = playbackCommandRef.current.then(command);
@@ -215,6 +235,19 @@ export default function Playback() {
             const result = await getPlaybackEpisodes(show.id, translation);
             if (requestId !== requestIdRef.current) return;
             setEpisodes(result);
+
+            if (initialProgress > 0 && result.length > 0) {
+                const nextEp = String(initialProgress + 1);
+                const currentEp = String(initialProgress);
+                const targetEp = result.includes(nextEp)
+                    ? nextEp
+                    : result.includes(currentEp)
+                        ? currentEp
+                        : null;
+                if (targetEp) {
+                    await handleLoadStreams(targetEp);
+                }
+            }
         } catch (error) {
             if (requestId === requestIdRef.current) setError(String(error));
         } finally {
@@ -236,14 +269,14 @@ export default function Playback() {
     }
 
     async function syncEpisodeProgress(nextEpisode: string | number) {
-        if (!hasAniListLink || linkedMediaId === null) return;
+        if (!hasAniListLink || effectiveMediaId === null) return;
 
         const numericEpisode = Number(nextEpisode);
         if (!Number.isFinite(numericEpisode) || numericEpisode <= 0) return;
 
         try {
             await updateEntry({
-                mediaId: linkedMediaId,
+                mediaId: effectiveMediaId,
                 status: "CURRENT",
                 progress: numericEpisode,
             });
@@ -422,7 +455,7 @@ export default function Playback() {
                             : "Idle";
 
     return (
-        <main className="playback">
+        <div className="playback">
             <PageHeader
                 icon={<Play size={20}/>}
                 title={selectedShow?.name ?? "Playback"}
@@ -437,8 +470,10 @@ export default function Playback() {
             />
 
             {error && (
-                <section className="playback__error">
-                    <div className="playback__error-icon">!</div>
+                <section className="playback__error" role="alert">
+                    <div className="playback__error-icon">
+                        <AlertCircle size={15} aria-hidden="true"/>
+                    </div>
 
                     <div>
                         <strong>Playback error</strong>
@@ -452,7 +487,9 @@ export default function Playback() {
                     {!selectedShow && (
                         <div className="playback__toolbar">
                             <div className="playback__search-input">
-                                <span aria-hidden="true">⌕</span>
+                                <span aria-hidden="true">
+                                    <Search size={16}/>
+                                </span>
 
                                 <input
                                     type="text"
@@ -547,10 +584,53 @@ export default function Playback() {
                         <section className="playback__player-details">
                             <span>←/→ seek · ↑/↓ volume · Space play/pause · F fullscreen</span>
                             <span className="playback__sync-status">
-                                {hasAniListLink && linkedMediaId
+                                {hasAniListLink && effectiveMediaId
                                     ? `AniList sync active for this ${linkedMediaType ?? "title"} · updates at 75% watched or on completion`
                                     : "AniList sync unavailable for manual search"}
                             </span>
+                            {!hasAniListLink && isAuthenticated && (
+                                <div className="playback__link-anilist">
+                                    {!showLinkPicker ? (
+                                        <button
+                                            type="button"
+                                            className="button-secondary"
+                                            onClick={() => {
+                                                setLinkSearchQuery(selectedShow.name);
+                                                setShowLinkPicker(true);
+                                            }}
+                                        >
+                                            Link to AniList for auto-sync
+                                        </button>
+                                    ) : (
+                                        <div className="playback__link-picker">
+                                            <input
+                                                type="text"
+                                                className="form-input"
+                                                value={linkSearchQuery}
+                                                onChange={(e) => setLinkSearchQuery(e.target.value)}
+                                                placeholder="Search AniList title..."
+                                                aria-label="Search AniList title to link"
+                                            />
+                                            {linkSearchResults?.media?.slice(0, 4).map((m) => (
+                                                <button
+                                                    key={m.id}
+                                                    type="button"
+                                                    className="playback__result"
+                                                    onClick={() => {
+                                                        setManualLinkedId(m.id);
+                                                        setShowLinkPicker(false);
+                                                    }}
+                                                >
+                                                    <div className="playback__result-main">
+                                                        <strong>{m.title.userPreferred || m.title.english || m.title.romaji}</strong>
+                                                        <span>{m.format ?? "ANIME"}</span>
+                                                    </div>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </section>
                     )}
 
@@ -589,7 +669,9 @@ export default function Playback() {
 
                     {!loading && !results.length && !selectedShow && !streams.length && (
                         <div className="playback__empty-state">
-                            <div className="playback__empty-state-icon">⌕</div>
+                            <div className="playback__empty-state-icon">
+                                <Search size={20} aria-hidden="true"/>
+                            </div>
                             <strong>{query.trim() ? "No anime found" : "Search for a title"}</strong>
                             <span>
                                 {query.trim()
@@ -616,11 +698,23 @@ export default function Playback() {
                                     void syncEpisodeProgress(selectedEpisode);
                                 }
                             }}
-                        />
+                        >
+                            {selectedStream?.subtitles?.map((sub, idx) => (
+                                <track
+                                    key={`${sub.url}-${idx}`}
+                                    kind="subtitles"
+                                    src={sub.url}
+                                    label={sub.label}
+                                    default={sub.default ?? idx === 0}
+                                />
+                            ))}
+                        </video>
 
                         {!selectedStream && (
                             <div className="playback__video-placeholder">
-                                <div className="playback__video-placeholder-icon">▶</div>
+                                <div className="playback__video-placeholder-icon">
+                                    <Play size={20} aria-hidden="true"/>
+                                </div>
                                 <strong>Nothing playing</strong>
                                 <span>
                                     Search for an anime and select a stream to start playback.
@@ -699,6 +793,6 @@ export default function Playback() {
                     )}
                 </section>
             </div>
-        </main>
+        </div>
     );
 }

@@ -34,7 +34,13 @@ query ($id: Int) {
     source
     countryOfOrigin
     isAdult
+    isFavourite
     siteUrl
+    nextAiringEpisode {
+      airingAt
+      timeUntilAiring
+      episode
+    }
     relations {
       edges {
         relationType
@@ -54,6 +60,65 @@ query ($id: Int) {
           }
           status
           format
+        }
+      }
+    }
+    characters(sort: [ROLE, RELEVANCE], perPage: 12) {
+      edges {
+        role
+        node {
+          id
+          name {
+            full
+          }
+          image {
+            large
+            medium
+          }
+        }
+        voiceActors(language: JAPANESE, sort: RELEVANCE) {
+          id
+          name {
+            full
+          }
+          image {
+            large
+            medium
+          }
+        }
+      }
+    }
+    staff(sort: RELEVANCE, perPage: 8) {
+      edges {
+        role
+        node {
+          id
+          name {
+            full
+          }
+          image {
+            large
+            medium
+          }
+        }
+      }
+    }
+    recommendations(sort: RATING_DESC, perPage: 6) {
+      nodes {
+        mediaRecommendation {
+          id
+          type
+          title {
+            romaji
+            english
+            userPreferred
+          }
+          coverImage {
+            large
+            medium
+          }
+          format
+          averageScore
         }
       }
     }
