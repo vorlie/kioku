@@ -54,9 +54,9 @@ dependencies = [
 
 [[package]]
 name = "ani-cli-rs"
-version = "0.11.3"
+version = "0.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "097366761e79ceeb4b4c896146ee8b2840afd729acf770f638019daebb0fac9f"
+checksum = "4ca66d7edd6e05d941bc730c2a9b14d1efb0a2539ac4da4582bf23cd577c20d1"
 dependencies = [
  "aes",
  "base64 0.22.1",
