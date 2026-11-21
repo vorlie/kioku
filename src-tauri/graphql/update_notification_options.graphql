@@ -1,0 +1,18 @@
+mutation UpdateNotificationOptions(
+  $airingNotifications: Boolean
+  $notificationOptions: [NotificationOptionInput]
+) {
+  UpdateUser(
+    airingNotifications: $airingNotifications
+    notificationOptions: $notificationOptions
+  ) {
+    id
+    options {
+      airingNotifications
+      notificationOptions {
+        type
+        enabled
+      }
+    }
+  }
+}

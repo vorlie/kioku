@@ -2,7 +2,8 @@ use crate::auth::AuthManager;
 use crate::error::{AppError, Result};
 use crate::models::{
     ActivityPage, ActivityReply, ActivityUnion, AiringSchedulePage, FuzzyDate, LikeToggleResult,
-    Media, MediaListEntry, Page, Response, Viewer,
+    Media, MediaListEntry, NotificationOption, NotificationPage, Page, Response,
+    UnreadNotificationCount, UserOptions, Viewer,
 };
 use reqwest::{Client, StatusCode};
 use serde::Deserialize;
@@ -700,5 +701,101 @@ impl AniListClient {
         let variables = serde_json::json!({ "id": id });
         let response: Response = self.execute_query(QUERY, Some(&variables)).await?;
         Ok(response.delete_activity_reply.deleted)
+    }
+
+    pub async fn unread_notification_count(&self) -> Result<UnreadNotificationCount> {
+        const QUERY: &str = include_str!("../../graphql/unread_notification_count.graphql");
+        self.get_auth_token().await?;
+
+        #[derive(Deserialize)]
+        struct ViewerUnread {
+            id: i32,
+            #[serde(rename = "unreadNotificationCount", default)]
+            unread_notification_count: Option<i32>,
+        }
+
+        #[derive(Deserialize)]
+        struct Response {
+            #[serde(rename = "Viewer")]
+            viewer: ViewerUnread,
+        }
+
+        let response: Response = self.execute_query(QUERY, None).await?;
+        if let Some(state) = self.app_handle.try_state::<AniListState>() {
+            if let Ok(mut guard) = state.viewer_id.lock() {
+                *guard = Some(response.viewer.id);
+            }
+        }
+
+        Ok(UnreadNotificationCount {
+            viewer_id: response.viewer.id,
+            unread_count: response.viewer.unread_notification_count.unwrap_or(0),
+        })
+    }
+
+    pub async fn notifications(
+        &self,
+        type_in: Option<Vec<String>>,
+        reset_notification_count: Option<bool>,
+        page: Option<i32>,
+        per_page: Option<i32>,
+    ) -> Result<NotificationPage> {
+        const QUERY: &str = include_str!("../../graphql/notifications.graphql");
+        self.get_auth_token().await?;
+
+        #[derive(Deserialize)]
+        struct Response {
+            #[serde(rename = "Page")]
+            page: NotificationPage,
+        }
+
+        let mut variables = serde_json::json!({
+            "page": page.unwrap_or(1),
+            "perPage": per_page.unwrap_or(25),
+            "resetNotificationCount": reset_notification_count.unwrap_or(false),
+        });
+
+        if let Some(types) = type_in.filter(|t| !t.is_empty()) {
+            variables["typeIn"] = serde_json::json!(types);
+        }
+
+        let response: Response = self.execute_query(QUERY, Some(&variables)).await?;
+        Ok(response.page)
+    }
+
+    pub async fn update_notification_options(
+        &self,
+        airing_notifications: Option<bool>,
+        notification_options: Option<Vec<NotificationOption>>,
+    ) -> Result<UserOptions> {
+        const QUERY: &str = include_str!("../../graphql/update_notification_options.graphql");
+        self.get_auth_token().await?;
+
+        #[derive(Deserialize)]
+        struct UpdateUserPayload {
+            #[serde(default)]
+            options: Option<UserOptions>,
+        }
+
+        #[derive(Deserialize)]
+        struct Response {
+            #[serde(rename = "UpdateUser")]
+            update_user: UpdateUserPayload,
+        }
+
+        let mut variables = serde_json::Map::new();
+        if let Some(airing) = airing_notifications {
+            variables.insert("airingNotifications".to_string(), serde_json::json!(airing));
+        }
+        if let Some(options) = notification_options {
+            variables.insert(
+                "notificationOptions".to_string(),
+                serde_json::json!(options),
+            );
+        }
+
+        let variables_value = serde_json::Value::Object(variables);
+        let response: Response = self.execute_query(QUERY, Some(&variables_value)).await?;
+        Ok(response.update_user.options.unwrap_or_default())
     }
 }
