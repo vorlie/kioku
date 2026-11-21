@@ -19,7 +19,9 @@ import type {
   NotificationItem,
   NotificationPage,
 } from "../types/anilist";
+import { dispatchDesktopNotifications } from "../utils/desktopNotifications";
 import {
+  filterNewNotifications,
   getMaxNotificationId,
 } from "../utils/notifications";
 
@@ -231,7 +233,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const refreshUnreadCount = useCallback(
-    async (_options?: RefreshUnreadOptions): Promise<number> => {
+    async (options?: RefreshUnreadOptions): Promise<number> => {
       if (!isAuthenticatedRef.current) return 0;
 
       if (inFlightRefreshRef.current) {
@@ -269,6 +271,42 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
               }
             } catch (seedError) {
               console.error("Failed to seed last notification ID:", seedError);
+            }
+          } else if (
+            !options?.suppressDesktop &&
+            preferencesRef.current.desktopEnabled &&
+            nextUnread > 0 &&
+            (prevUnreadCountRef.current === null ||
+              nextUnread > prevUnreadCountRef.current)
+          ) {
+            try {
+              const recentPage = await fetchNotifications({
+                page: 1,
+                perPage: 10,
+                resetNotificationCount: false,
+              });
+              if (isAuthenticatedRef.current) {
+                const newItems = filterNewNotifications(
+                  recentPage.notifications,
+                  storedLastId,
+                );
+                const updatedMaxId = getMaxNotificationId(
+                  recentPage.notifications,
+                  storedLastId,
+                );
+                setStoredLastNotifiedId(nextViewerId, updatedMaxId);
+                if (newItems.length > 0) {
+                  await dispatchDesktopNotifications(
+                    newItems,
+                    preferencesRef.current.desktopCategories,
+                  );
+                }
+              }
+            } catch (desktopError) {
+              console.error(
+                "Failed to dispatch desktop notifications:",
+                desktopError,
+              );
             }
           }
 
