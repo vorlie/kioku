@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./app/App";
+import { NotificationProvider } from "./context/NotificationContext";
 import { AuthProvider } from "./hooks/useAuth";
 import "./index.css";
 
@@ -19,7 +20,9 @@ document.documentElement.dataset.theme =
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
     <AuthProvider>
-      <App />
+      <NotificationProvider>
+        <App />
+      </NotificationProvider>
     </AuthProvider>
   </React.StrictMode>,
 );

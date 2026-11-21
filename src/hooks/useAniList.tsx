@@ -8,8 +8,12 @@ import type {
   FuzzyDate,
   Media,
   MediaListEntry,
+  NotificationOption,
+  NotificationPage,
   Page,
   PageInfo,
+  UnreadNotificationCount,
+  UserOptions,
   Viewer,
 } from "../types/anilist";
 
@@ -140,8 +144,8 @@ function useCachedQuery<T>(key: string, ttl: number, request: () => Promise<T>, 
   return { data, isLoading, error, refetch: () => load(true) };
 }
 
-export function useViewer() {
-  const query = useCachedQuery("viewer", TTL.viewer, () => invoke<Viewer>("get_viewer"));
+export function useViewer(enabled = true) {
+  const query = useCachedQuery("viewer", TTL.viewer, () => invoke<Viewer>("get_viewer"), enabled);
   return { viewer: query.data, ...query };
 }
 
@@ -402,4 +406,45 @@ export async function removeActivity(id: number) {
 
 export async function removeActivityReply(id: number) {
   return invoke<boolean>("delete_activity_reply", { id });
+}
+
+export async function fetchUnreadNotificationCount(): Promise<UnreadNotificationCount> {
+  return invoke<UnreadNotificationCount>("get_unread_notification_count");
+}
+
+export interface FetchNotificationsParams {
+  typeIn?: string[];
+  resetNotificationCount?: boolean;
+  page?: number;
+  perPage?: number;
+}
+
+export async function fetchNotifications(
+  params: FetchNotificationsParams = {},
+): Promise<NotificationPage> {
+  const {
+    typeIn,
+    resetNotificationCount = false,
+    page = 1,
+    perPage = 25,
+  } = params;
+
+  return invoke<NotificationPage>("get_notifications", {
+    typeIn: typeIn && typeIn.length > 0 ? typeIn : undefined,
+    resetNotificationCount,
+    page,
+    perPage,
+  });
+}
+
+export async function updateNotificationOptions(params: {
+  airingNotifications?: boolean;
+  notificationOptions?: NotificationOption[];
+}): Promise<UserOptions> {
+  const updated = await invoke<UserOptions>("update_notification_options", {
+    airingNotifications: params.airingNotifications,
+    notificationOptions: params.notificationOptions,
+  });
+  clearAniListCache("viewer");
+  return updated;
 }
