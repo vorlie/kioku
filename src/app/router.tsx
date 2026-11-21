@@ -12,6 +12,7 @@ const Browse = lazy(() => import("../pages/Browse"));
 const Calendar = lazy(() => import("../pages/Calendar"));
 const Statistics = lazy(() => import("../pages/Statistics"));
 const Activity = lazy(() => import("../pages/Activity"));
+const Notifications = lazy(() => import("../pages/Notifications"));
 const Settings = lazy(() => import("../pages/Settings"));
 const Playback = lazy(() => import("../pages/Playback"));
 
@@ -71,6 +72,10 @@ const router = createBrowserRouter([
       {
         path: "activity",
         element: withSuspense(<Activity />),
+      },
+      {
+        path: "notifications",
+        element: withSuspense(<Notifications />),
       },
       {
         path: "settings",
