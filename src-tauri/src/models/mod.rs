@@ -5,6 +5,7 @@ pub struct Title {
     pub romaji: Option<String>,
     pub english: Option<String>,
     pub native: Option<String>,
+    #[serde(rename = "userPreferred", alias = "user_preferred")]
     pub user_preferred: Option<String>,
 }
 
@@ -243,6 +244,29 @@ pub struct MediaConnection {
     pub nodes: Option<Vec<Media>>,
 }
 
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct UserOptions {
+    #[serde(rename = "airingNotifications", default)]
+    pub airing_notifications: Option<bool>,
+    #[serde(rename = "notificationOptions", default)]
+    pub notification_options: Option<Vec<NotificationOption>>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct NotificationOption {
+    #[serde(rename = "type")]
+    pub r#type: String,
+    pub enabled: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UnreadNotificationCount {
+    #[serde(rename = "viewerId")]
+    pub viewer_id: i32,
+    #[serde(rename = "unreadCount")]
+    pub unread_count: i32,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Viewer {
     pub id: i32,
@@ -250,6 +274,10 @@ pub struct Viewer {
     pub avatar: Option<Avatar>,
     #[serde(rename = "bannerImage")]
     pub banner_image: Option<String>,
+    #[serde(rename = "unreadNotificationCount", default)]
+    pub unread_notification_count: Option<i32>,
+    #[serde(default)]
+    pub options: Option<UserOptions>,
     pub statistics: Option<UserStatistics>,
     pub favourites: Option<Favourites>,
 }
@@ -337,7 +365,7 @@ pub struct UserScoreStatistic {
 CORE PAGE GENERICS
 ------------------------------------------------------------- */
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct PageInfo {
     pub total: Option<i32>,
     #[serde(rename = "perPage")]
@@ -639,4 +667,573 @@ pub struct LikeToggleResult {
     pub like_count: i32,
     #[serde(rename = "isLiked")]
     pub is_liked: bool,
+}
+
+/* -------------------------------------------------------------
+NOTIFICATION MODELS
+------------------------------------------------------------- */
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NotificationUser {
+    pub id: i32,
+    pub name: String,
+    #[serde(default)]
+    pub avatar: Option<Avatar>,
+    #[serde(rename = "siteUrl", default)]
+    pub site_url: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NotificationMedia {
+    pub id: i32,
+    #[serde(rename = "type", default)]
+    pub r#type: Option<String>,
+    #[serde(default)]
+    pub title: Option<Title>,
+    #[serde(rename = "coverImage", default)]
+    pub cover_image: Option<CoverImage>,
+    #[serde(default)]
+    pub format: Option<String>,
+    #[serde(rename = "siteUrl", default)]
+    pub site_url: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NotificationActivityPreview {
+    pub id: i32,
+    #[serde(rename = "type", default)]
+    pub r#type: Option<String>,
+    #[serde(default)]
+    pub text: Option<String>,
+    #[serde(default)]
+    pub message: Option<String>,
+    #[serde(default)]
+    pub status: Option<String>,
+    #[serde(default)]
+    pub progress: Option<String>,
+    #[serde(rename = "siteUrl", default)]
+    pub site_url: Option<String>,
+    #[serde(default)]
+    pub media: Option<NotificationMedia>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NotificationThread {
+    pub id: i32,
+    #[serde(default)]
+    pub title: Option<String>,
+    #[serde(rename = "siteUrl", default)]
+    pub site_url: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NotificationThreadComment {
+    pub id: i32,
+    #[serde(default)]
+    pub comment: Option<String>,
+    #[serde(rename = "siteUrl", default)]
+    pub site_url: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NotificationPersonName {
+    #[serde(default)]
+    pub full: Option<String>,
+    #[serde(rename = "userPreferred", default)]
+    pub user_preferred: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NotificationPersonImage {
+    #[serde(default)]
+    pub medium: Option<String>,
+    #[serde(default)]
+    pub large: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NotificationPerson {
+    pub id: i32,
+    #[serde(default)]
+    pub name: Option<NotificationPersonName>,
+    #[serde(default)]
+    pub image: Option<NotificationPersonImage>,
+    #[serde(rename = "siteUrl", default)]
+    pub site_url: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct NotificationItem {
+    pub id: i32,
+    #[serde(rename = "type")]
+    pub r#type: String,
+    #[serde(rename = "createdAt")]
+    pub created_at: i64,
+    pub context: Option<String>,
+    pub contexts: Option<Vec<String>>,
+    #[serde(rename = "animeId")]
+    pub anime_id: Option<i32>,
+    pub episode: Option<i32>,
+    #[serde(rename = "userId")]
+    pub user_id: Option<i32>,
+    #[serde(rename = "activityId")]
+    pub activity_id: Option<i32>,
+    #[serde(rename = "commentId")]
+    pub comment_id: Option<i32>,
+    #[serde(rename = "threadId")]
+    pub thread_id: Option<i32>,
+    #[serde(rename = "mediaId")]
+    pub media_id: Option<i32>,
+    pub reason: Option<String>,
+    pub status: Option<String>,
+    pub notes: Option<String>,
+    #[serde(rename = "submittedTitle")]
+    pub submitted_title: Option<String>,
+    #[serde(rename = "deletedMediaTitle")]
+    pub deleted_media_title: Option<String>,
+    #[serde(rename = "deletedMediaTitles")]
+    pub deleted_media_titles: Option<Vec<String>>,
+    pub user: Option<NotificationUser>,
+    pub media: Option<NotificationMedia>,
+    pub activity: Option<NotificationActivityPreview>,
+    pub thread: Option<NotificationThread>,
+    pub comment: Option<NotificationThreadComment>,
+    pub staff: Option<NotificationPerson>,
+    pub character: Option<NotificationPerson>,
+}
+
+#[derive(Debug, Default, Deserialize)]
+#[serde(default)]
+struct NotificationWrapper {
+    pub id: Option<i32>,
+    #[serde(rename = "type")]
+    pub r#type: Option<String>,
+    #[serde(rename = "createdAt")]
+    pub created_at: Option<i64>,
+    pub context: Option<String>,
+    pub contexts: Option<Vec<Option<String>>>,
+    #[serde(rename = "animeId")]
+    pub anime_id: Option<i32>,
+    pub episode: Option<i32>,
+    #[serde(rename = "userId")]
+    pub user_id: Option<i32>,
+    #[serde(rename = "activityId")]
+    pub activity_id: Option<i32>,
+    #[serde(rename = "commentId")]
+    pub comment_id: Option<i32>,
+    #[serde(rename = "threadId")]
+    pub thread_id: Option<i32>,
+    #[serde(rename = "mediaId")]
+    pub media_id: Option<i32>,
+    pub reason: Option<String>,
+    pub status: Option<String>,
+    pub notes: Option<String>,
+    #[serde(rename = "submittedTitle")]
+    pub submitted_title: Option<String>,
+    #[serde(rename = "deletedMediaTitle")]
+    pub deleted_media_title: Option<String>,
+    #[serde(rename = "deletedMediaTitles")]
+    pub deleted_media_titles: Option<Vec<Option<String>>>,
+    pub user: Option<NotificationUser>,
+    pub media: Option<NotificationMedia>,
+    pub activity: Option<NotificationActivityPreview>,
+    pub message: Option<NotificationActivityPreview>,
+    pub thread: Option<NotificationThread>,
+    pub comment: Option<NotificationThreadComment>,
+    pub staff: Option<NotificationPerson>,
+    pub character: Option<NotificationPerson>,
+}
+
+impl From<NotificationWrapper> for Option<NotificationItem> {
+    fn from(wrapper: NotificationWrapper) -> Self {
+        let id = wrapper.id?;
+        let contexts = wrapper
+            .contexts
+            .map(|items| items.into_iter().flatten().collect());
+        let deleted_media_titles = wrapper
+            .deleted_media_titles
+            .map(|items| items.into_iter().flatten().collect());
+
+        Some(NotificationItem {
+            id,
+            r#type: wrapper.r#type.unwrap_or_else(|| "UNKNOWN".to_string()),
+            created_at: wrapper.created_at.unwrap_or(0),
+            context: wrapper.context,
+            contexts,
+            anime_id: wrapper.anime_id,
+            episode: wrapper.episode,
+            user_id: wrapper.user_id,
+            activity_id: wrapper.activity_id,
+            comment_id: wrapper.comment_id,
+            thread_id: wrapper.thread_id,
+            media_id: wrapper.media_id,
+            reason: wrapper.reason,
+            status: wrapper.status,
+            notes: wrapper.notes,
+            submitted_title: wrapper.submitted_title,
+            deleted_media_title: wrapper.deleted_media_title,
+            deleted_media_titles,
+            user: wrapper.user,
+            media: wrapper.media,
+            activity: wrapper.activity.or(wrapper.message),
+            thread: wrapper.thread,
+            comment: wrapper.comment,
+            staff: wrapper.staff,
+            character: wrapper.character,
+        })
+    }
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct NotificationPage {
+    #[serde(rename = "pageInfo")]
+    pub page_info: PageInfo,
+    pub notifications: Vec<NotificationItem>,
+}
+
+#[derive(Debug, Default, Deserialize)]
+#[serde(default)]
+struct NotificationPageRaw {
+    #[serde(rename = "pageInfo")]
+    page_info: Option<PageInfo>,
+    notifications: Option<Vec<Option<NotificationWrapper>>>,
+}
+
+impl<'de> Deserialize<'de> for NotificationPage {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let raw = NotificationPageRaw::deserialize(deserializer)?;
+        let notifications = raw
+            .notifications
+            .unwrap_or_default()
+            .into_iter()
+            .flatten()
+            .filter_map(Option::<NotificationItem>::from)
+            .collect();
+
+        Ok(NotificationPage {
+            page_info: raw.page_info.unwrap_or_default(),
+            notifications,
+        })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn deserializes_all_notification_shapes_and_tolerates_nulls_and_unknown_types() {
+        let payload = serde_json::json!({
+            "pageInfo": {
+                "total": 10,
+                "perPage": 25,
+                "currentPage": 1,
+                "lastPage": 1,
+                "hasNextPage": false
+            },
+            "notifications": [
+                null,
+                {
+                    "id": 101,
+                    "type": "AIRING",
+                    "animeId": 21,
+                    "episode": 7,
+                    "contexts": ["Episode ", " of ", null, " aired."],
+                    "createdAt": 1700000100,
+                    "media": {
+                        "id": 21,
+                        "type": "ANIME",
+                        "title": {
+                            "userPreferred": "Frieren",
+                            "english": "Frieren: Beyond Journey's End",
+                            "romaji": "Sousou no Frieren",
+                            "native": "葬送のフリーレン"
+                        },
+                        "coverImage": {
+                            "medium": "https://img.example/m.jpg",
+                            "large": "https://img.example/l.jpg",
+                            "color": "#5ab8ff"
+                        },
+                        "format": "TV",
+                        "siteUrl": "https://anilist.co/anime/21"
+                    }
+                },
+                {
+                    "id": 102,
+                    "type": "ACTIVITY_MESSAGE",
+                    "userId": 42,
+                    "activityId": 9901,
+                    "context": " sent you a message.",
+                    "createdAt": 1700000200,
+                    "user": {
+                        "id": 42,
+                        "name": "Himmel",
+                        "avatar": { "medium": "https://img.example/u.jpg" },
+                        "siteUrl": "https://anilist.co/user/Himmel"
+                    },
+                    "message": {
+                        "id": 9901,
+                        "type": "MESSAGE",
+                        "message": "Watch tonight?",
+                        "siteUrl": "https://anilist.co/activity/9901"
+                    }
+                },
+                {
+                    "id": 103,
+                    "type": "ACTIVITY_REPLY",
+                    "userId": 43,
+                    "activityId": 9902,
+                    "context": " replied to your activity.",
+                    "createdAt": 1700000300,
+                    "user": {
+                        "id": 43,
+                        "name": "Fern"
+                    },
+                    "activity": {
+                        "id": 9902,
+                        "type": "ANIME_LIST",
+                        "status": "watched episode",
+                        "progress": "7",
+                        "siteUrl": "https://anilist.co/activity/9902",
+                        "media": {
+                            "id": 21,
+                            "type": "ANIME",
+                            "title": { "userPreferred": "Frieren" }
+                        }
+                    }
+                },
+                {
+                    "id": 104,
+                    "type": "ACTIVITY_MENTION",
+                    "userId": 44,
+                    "activityId": 9903,
+                    "context": " mentioned you in their activity.",
+                    "createdAt": 1700000350,
+                    "user": null,
+                    "activity": {
+                        "id": 9903,
+                        "type": "TEXT",
+                        "text": "Hey @user check this out",
+                        "siteUrl": "https://anilist.co/activity/9903"
+                    }
+                },
+                {
+                    "id": 105,
+                    "type": "THREAD_COMMENT_MENTION",
+                    "userId": 45,
+                    "commentId": 8801,
+                    "context": " mentioned you, in a forum comment.",
+                    "createdAt": 1700000400,
+                    "user": { "id": 45, "name": "Stark" },
+                    "thread": {
+                        "id": 77,
+                        "title": "Seasonal Episode 7 Discussion",
+                        "siteUrl": "https://anilist.co/forum/thread/77"
+                    },
+                    "comment": {
+                        "id": 8801,
+                        "comment": "Great animation in ep 7!",
+                        "siteUrl": "https://anilist.co/forum/thread/77/comment/8801"
+                    }
+                },
+                {
+                    "id": 106,
+                    "type": "THREAD_LIKE",
+                    "userId": 46,
+                    "threadId": 77,
+                    "context": " liked your thread.",
+                    "createdAt": 1700000450,
+                    "thread": { "id": 77, "title": "Discussion" }
+                },
+                {
+                    "id": 107,
+                    "type": "MEDIA_MERGE",
+                    "mediaId": 300,
+                    "deletedMediaTitles": ["Old Duplicate", null],
+                    "context": " has been merged into ",
+                    "reason": "Duplicate entry",
+                    "createdAt": 1700000500,
+                    "media": null
+                },
+                {
+                    "id": 108,
+                    "type": "MEDIA_DELETION",
+                    "deletedMediaTitle": "Removed Title",
+                    "context": " was deleted from the site.",
+                    "reason": "Did not meet guidelines",
+                    "createdAt": 1700000550
+                },
+                {
+                    "id": 109,
+                    "type": "MEDIA_SUBMISSION_UPDATE",
+                    "contexts": ["Your submission for ", " was accepted."],
+                    "status": "ACCEPTED",
+                    "notes": "Thanks for contributing",
+                    "submittedTitle": "Fallback Title",
+                    "createdAt": 1700000600,
+                    "media": null
+                },
+                {
+                    "id": 110,
+                    "type": "STAFF_SUBMISSION_UPDATE",
+                    "contexts": ["Your staff submission was rejected."],
+                    "status": "REJECTED",
+                    "notes": "Duplicate",
+                    "createdAt": 1700000650,
+                    "staff": {
+                        "id": 95001,
+                        "name": { "full": "Keiichiro Saito", "userPreferred": "Keiichiro Saito" },
+                        "image": { "medium": "https://img.example/s.jpg" },
+                        "siteUrl": "https://anilist.co/staff/95001"
+                    }
+                },
+                {
+                    "id": 111,
+                    "type": "CHARACTER_SUBMISSION_UPDATE",
+                    "contexts": ["Your character submission was accepted."],
+                    "status": "ACCEPTED",
+                    "createdAt": 1700000700,
+                    "character": {
+                        "id": 176754,
+                        "name": { "full": "Frieren" },
+                        "image": { "large": "https://img.example/c.jpg" },
+                        "siteUrl": "https://anilist.co/character/176754"
+                    }
+                },
+                {
+                    "id": 112,
+                    "type": "FUTURE_NEW_ANILIST_TYPE",
+                    "createdAt": 1700000800,
+                    "unknownNestedObject": { "foo": "bar" }
+                },
+                {
+                    "type": "AIRING"
+                }
+            ]
+        });
+
+        let page: NotificationPage =
+            serde_json::from_value(payload).expect("notification page should deserialize");
+
+        // null row and id-less row should be skipped safely (14 entries -> 12 valid)
+        assert_eq!(page.notifications.len(), 12);
+
+        let airing = &page.notifications[0];
+        assert_eq!(airing.r#type, "AIRING");
+        assert_eq!(airing.episode, Some(7));
+        assert_eq!(
+            airing.contexts.as_ref().map(|c| c.len()),
+            Some(3),
+            "null elements inside contexts should be stripped"
+        );
+        let serialized_media = serde_json::to_value(&airing.media).unwrap();
+        assert_eq!(serialized_media["title"]["userPreferred"], "Frieren");
+
+        let msg = &page.notifications[1];
+        assert_eq!(msg.r#type, "ACTIVITY_MESSAGE");
+        assert_eq!(
+            msg.activity.as_ref().and_then(|a| a.message.as_deref()),
+            Some("Watch tonight?")
+        );
+
+        let reply = &page.notifications[2];
+        assert_eq!(
+            reply
+                .activity
+                .as_ref()
+                .and_then(|a| a.media.as_ref())
+                .map(|m| m.id),
+            Some(21)
+        );
+
+        let mention = &page.notifications[3];
+        assert!(mention.user.is_none());
+        assert_eq!(
+            mention.activity.as_ref().and_then(|a| a.text.as_deref()),
+            Some("Hey @user check this out")
+        );
+
+        let forum_mention = &page.notifications[4];
+        assert_eq!(
+            forum_mention
+                .thread
+                .as_ref()
+                .and_then(|t| t.title.as_deref()),
+            Some("Seasonal Episode 7 Discussion")
+        );
+        assert_eq!(
+            forum_mention
+                .comment
+                .as_ref()
+                .and_then(|c| c.comment.as_deref()),
+            Some("Great animation in ep 7!")
+        );
+
+        let thread_like = &page.notifications[5];
+        assert_eq!(thread_like.thread_id, Some(77));
+
+        let merge = &page.notifications[6];
+        assert_eq!(
+            merge.deleted_media_titles,
+            Some(vec!["Old Duplicate".to_string()])
+        );
+
+        let deletion = &page.notifications[7];
+        assert_eq!(
+            deletion.deleted_media_title.as_deref(),
+            Some("Removed Title")
+        );
+
+        let sub_media = &page.notifications[8];
+        assert_eq!(sub_media.submitted_title.as_deref(), Some("Fallback Title"));
+
+        let sub_staff = &page.notifications[9];
+        assert_eq!(
+            sub_staff
+                .staff
+                .as_ref()
+                .and_then(|s| s.name.as_ref())
+                .and_then(|n| n.full.as_deref()),
+            Some("Keiichiro Saito")
+        );
+
+        let sub_char = &page.notifications[10];
+        assert_eq!(sub_char.character.as_ref().map(|c| c.id), Some(176754));
+
+        let future = &page.notifications[11];
+        assert_eq!(future.r#type, "FUTURE_NEW_ANILIST_TYPE");
+    }
+
+    #[test]
+    fn deserializes_viewer_options_and_unread_count() {
+        let viewer_json = serde_json::json!({
+            "id": 7,
+            "name": "KiokuUser",
+            "unreadNotificationCount": 14,
+            "options": {
+                "airingNotifications": true,
+                "notificationOptions": [
+                    { "type": "ACTIVITY_REPLY", "enabled": true },
+                    { "type": "FOLLOWING", "enabled": false }
+                ]
+            }
+        });
+
+        let viewer: Viewer = serde_json::from_value(viewer_json).unwrap();
+        assert_eq!(viewer.unread_notification_count, Some(14));
+        let options = viewer.options.unwrap();
+        assert_eq!(options.airing_notifications, Some(true));
+        let items = options.notification_options.unwrap();
+        assert_eq!(items.len(), 2);
+        assert_eq!(
+            items[1],
+            NotificationOption {
+                r#type: "FOLLOWING".to_string(),
+                enabled: false
+            }
+        );
+    }
 }

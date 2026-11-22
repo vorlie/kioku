@@ -10,7 +10,8 @@ use auth::AuthManager;
 use auth_server::AuthServer;
 use models::{
     ActivityPage, ActivityReply, ActivityUnion, AiringSchedulePage, LikeToggleResult, Media,
-    MediaListEntry, Page, Viewer,
+    MediaListEntry, NotificationOption, NotificationPage, Page, UnreadNotificationCount,
+    UserOptions, Viewer,
 };
 use std::sync::Mutex;
 use tauri::Manager;
@@ -317,9 +318,44 @@ async fn delete_activity_reply(app: tauri::AppHandle, id: i32) -> Result<bool, e
     client.delete_activity_reply(id).await
 }
 
+#[tauri::command]
+async fn get_unread_notification_count(
+    app: tauri::AppHandle,
+) -> Result<UnreadNotificationCount, error::AppError> {
+    let client = AniListClient::new(app);
+    client.unread_notification_count().await
+}
+
+#[tauri::command]
+async fn get_notifications(
+    app: tauri::AppHandle,
+    type_in: Option<Vec<String>>,
+    reset_notification_count: Option<bool>,
+    page: Option<i32>,
+    per_page: Option<i32>,
+) -> Result<NotificationPage, error::AppError> {
+    let client = AniListClient::new(app);
+    client
+        .notifications(type_in, reset_notification_count, page, per_page)
+        .await
+}
+
+#[tauri::command]
+async fn update_notification_options(
+    app: tauri::AppHandle,
+    airing_notifications: Option<bool>,
+    notification_options: Option<Vec<NotificationOption>>,
+) -> Result<UserOptions, error::AppError> {
+    let client = AniListClient::new(app);
+    client
+        .update_notification_options(airing_notifications, notification_options)
+        .await
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_shell::init())
         .manage(AuthServerState(Mutex::new(None)))
@@ -352,6 +388,9 @@ pub fn run() {
             save_activity_reply,
             delete_activity,
             delete_activity_reply,
+            get_unread_notification_count,
+            get_notifications,
+            update_notification_options,
             playback::playback_search,
             playback::playback_episodes,
             playback::playback_streams,

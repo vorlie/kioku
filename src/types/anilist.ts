@@ -220,11 +220,61 @@ export interface UserFavouritesData {
   manga?: FavouritesConnection;
 }
 
+export type NotificationType =
+  | "ACTIVITY_MESSAGE"
+  | "ACTIVITY_REPLY"
+  | "FOLLOWING"
+  | "ACTIVITY_MENTION"
+  | "THREAD_COMMENT_MENTION"
+  | "THREAD_SUBSCRIBED"
+  | "THREAD_COMMENT_REPLY"
+  | "AIRING"
+  | "ACTIVITY_LIKE"
+  | "ACTIVITY_REPLY_LIKE"
+  | "THREAD_LIKE"
+  | "THREAD_COMMENT_LIKE"
+  | "ACTIVITY_REPLY_SUBSCRIBED"
+  | "RELATED_MEDIA_ADDITION"
+  | "MEDIA_DATA_CHANGE"
+  | "MEDIA_MERGE"
+  | "MEDIA_DELETION"
+  | "MEDIA_SUBMISSION_UPDATE"
+  | "STAFF_SUBMISSION_UPDATE"
+  | "CHARACTER_SUBMISSION_UPDATE"
+  | (string & {});
+
+export type NotificationCategory =
+  | "all"
+  | "airing"
+  | "activity"
+  | "follows"
+  | "forum"
+  | "media";
+
+export type DesktopNotificationCategory = Exclude<NotificationCategory, "all">;
+
+export interface NotificationOption {
+  type: NotificationType;
+  enabled: boolean;
+}
+
+export interface UserOptions {
+  airingNotifications?: boolean;
+  notificationOptions?: NotificationOption[];
+}
+
+export interface UnreadNotificationCount {
+  viewerId: number;
+  unreadCount: number;
+}
+
 export interface Viewer {
   id: number;
   name: string;
   avatar?: Avatar;
   bannerImage?: string;
+  unreadNotificationCount?: number;
+  options?: UserOptions;
   mediaListOptions?: MediaListOptions;
   statistics?: UserStatisticTypes;
   favourites?: UserFavouritesData;
@@ -332,4 +382,89 @@ export type ActivityUnion = TextActivity | ListActivity | MessageActivity;
 export interface ActivityPage {
   pageInfo: PageInfo;
   activities?: ActivityUnion[];
+}
+
+export interface NotificationUser {
+  id: number;
+  name: string;
+  avatar?: Avatar;
+  siteUrl?: string;
+}
+
+export interface NotificationMedia {
+  id: number;
+  type?: string;
+  title?: Title;
+  coverImage?: CoverImage;
+  format?: string;
+  siteUrl?: string;
+}
+
+export interface NotificationActivityPreview {
+  id: number;
+  type?: string;
+  text?: string;
+  message?: string;
+  status?: string;
+  progress?: string;
+  siteUrl?: string;
+  media?: NotificationMedia;
+}
+
+export interface NotificationThread {
+  id: number;
+  title?: string;
+  siteUrl?: string;
+}
+
+export interface NotificationThreadComment {
+  id: number;
+  comment?: string;
+  siteUrl?: string;
+}
+
+export interface NotificationPerson {
+  id: number;
+  name?: {
+    full?: string;
+    userPreferred?: string;
+  };
+  image?: {
+    medium?: string;
+    large?: string;
+  };
+  siteUrl?: string;
+}
+
+export interface NotificationItem {
+  id: number;
+  type: NotificationType;
+  createdAt: number;
+  context?: string;
+  contexts?: string[];
+  animeId?: number;
+  episode?: number;
+  userId?: number;
+  activityId?: number;
+  commentId?: number;
+  threadId?: number;
+  mediaId?: number;
+  reason?: string;
+  status?: string;
+  notes?: string;
+  submittedTitle?: string;
+  deletedMediaTitle?: string;
+  deletedMediaTitles?: string[];
+  user?: NotificationUser;
+  media?: NotificationMedia;
+  activity?: NotificationActivityPreview;
+  thread?: NotificationThread;
+  comment?: NotificationThreadComment;
+  staff?: NotificationPerson;
+  character?: NotificationPerson;
+}
+
+export interface NotificationPage {
+  pageInfo: PageInfo;
+  notifications: NotificationItem[];
 }

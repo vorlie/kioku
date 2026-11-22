@@ -1,0 +1,644 @@
+query Notifications(
+  $page: Int
+  $perPage: Int
+  $typeIn: [NotificationType]
+  $resetNotificationCount: Boolean
+) {
+  Page(page: $page, perPage: $perPage) {
+    pageInfo {
+      total
+      perPage
+      currentPage
+      lastPage
+      hasNextPage
+    }
+    notifications(
+      type_in: $typeIn
+      resetNotificationCount: $resetNotificationCount
+    ) {
+      ... on AiringNotification {
+        id
+        type
+        animeId
+        episode
+        contexts
+        createdAt
+        media {
+          id
+          type
+          title {
+            userPreferred
+            english
+            romaji
+            native
+          }
+          coverImage {
+            medium
+            large
+            color
+          }
+          format
+          siteUrl
+        }
+      }
+      ... on FollowingNotification {
+        id
+        userId
+        type
+        context
+        createdAt
+        user {
+          id
+          name
+          avatar {
+            medium
+            large
+          }
+          siteUrl
+        }
+      }
+      ... on ActivityMessageNotification {
+        id
+        userId
+        type
+        activityId
+        context
+        createdAt
+        user {
+          id
+          name
+          avatar {
+            medium
+            large
+          }
+          siteUrl
+        }
+        message {
+          id
+          type
+          message
+          siteUrl
+        }
+      }
+      ... on ActivityMentionNotification {
+        id
+        userId
+        type
+        activityId
+        context
+        createdAt
+        user {
+          id
+          name
+          avatar {
+            medium
+            large
+          }
+          siteUrl
+        }
+        activity {
+          ... on TextActivity {
+            id
+            type
+            text
+            siteUrl
+          }
+          ... on ListActivity {
+            id
+            type
+            status
+            progress
+            siteUrl
+            media {
+              id
+              type
+              title {
+                userPreferred
+                english
+                romaji
+                native
+              }
+              coverImage {
+                medium
+                large
+                color
+              }
+              format
+              siteUrl
+            }
+          }
+          ... on MessageActivity {
+            id
+            type
+            message
+            siteUrl
+          }
+        }
+      }
+      ... on ActivityReplyNotification {
+        id
+        userId
+        type
+        activityId
+        context
+        createdAt
+        user {
+          id
+          name
+          avatar {
+            medium
+            large
+          }
+          siteUrl
+        }
+        activity {
+          ... on TextActivity {
+            id
+            type
+            text
+            siteUrl
+          }
+          ... on ListActivity {
+            id
+            type
+            status
+            progress
+            siteUrl
+            media {
+              id
+              type
+              title {
+                userPreferred
+                english
+                romaji
+                native
+              }
+              coverImage {
+                medium
+                large
+                color
+              }
+              format
+              siteUrl
+            }
+          }
+          ... on MessageActivity {
+            id
+            type
+            message
+            siteUrl
+          }
+        }
+      }
+      ... on ActivityReplySubscribedNotification {
+        id
+        userId
+        type
+        activityId
+        context
+        createdAt
+        user {
+          id
+          name
+          avatar {
+            medium
+            large
+          }
+          siteUrl
+        }
+        activity {
+          ... on TextActivity {
+            id
+            type
+            text
+            siteUrl
+          }
+          ... on ListActivity {
+            id
+            type
+            status
+            progress
+            siteUrl
+            media {
+              id
+              type
+              title {
+                userPreferred
+                english
+                romaji
+                native
+              }
+              coverImage {
+                medium
+                large
+                color
+              }
+              format
+              siteUrl
+            }
+          }
+          ... on MessageActivity {
+            id
+            type
+            message
+            siteUrl
+          }
+        }
+      }
+      ... on ActivityLikeNotification {
+        id
+        userId
+        type
+        activityId
+        context
+        createdAt
+        user {
+          id
+          name
+          avatar {
+            medium
+            large
+          }
+          siteUrl
+        }
+        activity {
+          ... on TextActivity {
+            id
+            type
+            text
+            siteUrl
+          }
+          ... on ListActivity {
+            id
+            type
+            status
+            progress
+            siteUrl
+            media {
+              id
+              type
+              title {
+                userPreferred
+                english
+                romaji
+                native
+              }
+              coverImage {
+                medium
+                large
+                color
+              }
+              format
+              siteUrl
+            }
+          }
+          ... on MessageActivity {
+            id
+            type
+            message
+            siteUrl
+          }
+        }
+      }
+      ... on ActivityReplyLikeNotification {
+        id
+        userId
+        type
+        activityId
+        context
+        createdAt
+        user {
+          id
+          name
+          avatar {
+            medium
+            large
+          }
+          siteUrl
+        }
+        activity {
+          ... on TextActivity {
+            id
+            type
+            text
+            siteUrl
+          }
+          ... on ListActivity {
+            id
+            type
+            status
+            progress
+            siteUrl
+            media {
+              id
+              type
+              title {
+                userPreferred
+                english
+                romaji
+                native
+              }
+              coverImage {
+                medium
+                large
+                color
+              }
+              format
+              siteUrl
+            }
+          }
+          ... on MessageActivity {
+            id
+            type
+            message
+            siteUrl
+          }
+        }
+      }
+      ... on ThreadCommentMentionNotification {
+        id
+        userId
+        type
+        commentId
+        context
+        createdAt
+        user {
+          id
+          name
+          avatar {
+            medium
+            large
+          }
+          siteUrl
+        }
+        thread {
+          id
+          title
+          siteUrl
+        }
+        comment {
+          id
+          comment
+          siteUrl
+        }
+      }
+      ... on ThreadCommentReplyNotification {
+        id
+        userId
+        type
+        commentId
+        context
+        createdAt
+        user {
+          id
+          name
+          avatar {
+            medium
+            large
+          }
+          siteUrl
+        }
+        thread {
+          id
+          title
+          siteUrl
+        }
+        comment {
+          id
+          comment
+          siteUrl
+        }
+      }
+      ... on ThreadCommentSubscribedNotification {
+        id
+        userId
+        type
+        commentId
+        context
+        createdAt
+        user {
+          id
+          name
+          avatar {
+            medium
+            large
+          }
+          siteUrl
+        }
+        thread {
+          id
+          title
+          siteUrl
+        }
+        comment {
+          id
+          comment
+          siteUrl
+        }
+      }
+      ... on ThreadCommentLikeNotification {
+        id
+        userId
+        type
+        commentId
+        context
+        createdAt
+        user {
+          id
+          name
+          avatar {
+            medium
+            large
+          }
+          siteUrl
+        }
+        thread {
+          id
+          title
+          siteUrl
+        }
+        comment {
+          id
+          comment
+          siteUrl
+        }
+      }
+      ... on ThreadLikeNotification {
+        id
+        userId
+        type
+        threadId
+        context
+        createdAt
+        user {
+          id
+          name
+          avatar {
+            medium
+            large
+          }
+          siteUrl
+        }
+        thread {
+          id
+          title
+          siteUrl
+        }
+        comment {
+          id
+          comment
+          siteUrl
+        }
+      }
+      ... on RelatedMediaAdditionNotification {
+        id
+        type
+        mediaId
+        context
+        createdAt
+        media {
+          id
+          type
+          title {
+            userPreferred
+            english
+            romaji
+            native
+          }
+          coverImage {
+            medium
+            large
+            color
+          }
+          format
+          siteUrl
+        }
+      }
+      ... on MediaDataChangeNotification {
+        id
+        type
+        mediaId
+        context
+        reason
+        createdAt
+        media {
+          id
+          type
+          title {
+            userPreferred
+            english
+            romaji
+            native
+          }
+          coverImage {
+            medium
+            large
+            color
+          }
+          format
+          siteUrl
+        }
+      }
+      ... on MediaMergeNotification {
+        id
+        type
+        mediaId
+        deletedMediaTitles
+        context
+        reason
+        createdAt
+        media {
+          id
+          type
+          title {
+            userPreferred
+            english
+            romaji
+            native
+          }
+          coverImage {
+            medium
+            large
+            color
+          }
+          format
+          siteUrl
+        }
+      }
+      ... on MediaDeletionNotification {
+        id
+        type
+        deletedMediaTitle
+        context
+        reason
+        createdAt
+      }
+      ... on MediaSubmissionUpdateNotification {
+        id
+        type
+        contexts
+        status
+        notes
+        submittedTitle
+        createdAt
+        media {
+          id
+          type
+          title {
+            userPreferred
+            english
+            romaji
+            native
+          }
+          coverImage {
+            medium
+            large
+            color
+          }
+          format
+          siteUrl
+        }
+      }
+      ... on StaffSubmissionUpdateNotification {
+        id
+        type
+        contexts
+        status
+        notes
+        createdAt
+        staff {
+          id
+          name {
+            full
+            userPreferred
+          }
+          image {
+            medium
+            large
+          }
+          siteUrl
+        }
+      }
+      ... on CharacterSubmissionUpdateNotification {
+        id
+        type
+        contexts
+        status
+        notes
+        createdAt
+        character {
+          id
+          name {
+            full
+            userPreferred
+          }
+          image {
+            medium
+            large
+          }
+          siteUrl
+        }
+      }
+    }
+  }
+}

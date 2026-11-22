@@ -159,8 +159,126 @@
     box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 16%, transparent);
 }
 
-.settings-panel--playback .settings-row + .settings-row {
+.settings-panel--playback .settings-row + .settings-row,
+.settings-panel--notifications .settings-row + .settings-row,
+.settings-panel--notifications .settings-subpanel-header + .settings-row,
+.settings-panel--notifications .settings-option-group {
     border-top: 1px solid var(--border);
+}
+
+.settings-row--stacked {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-3);
+}
+
+.settings-inline-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    flex-shrink: 0;
+}
+
+.settings-mini-btn {
+    min-height: 32px;
+    padding: 0 var(--space-3);
+    font-size: var(--font-size-xs);
+}
+
+.settings-chip-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+}
+
+.settings-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: var(--radius-full);
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
+    cursor: pointer;
+    transition:
+        color 0.15s ease,
+        background-color 0.15s ease,
+        border-color 0.15s ease;
+}
+
+.settings-chip:hover {
+    color: var(--text);
+    background: var(--surface-hover);
+    border-color: var(--border-strong);
+}
+
+.settings-chip--active {
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 14%, var(--surface));
+    border-color: color-mix(in srgb, var(--accent) 34%, var(--border));
+}
+
+.settings-subpanel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding: var(--space-4) var(--space-5);
+    background: var(--surface-raised);
+}
+
+.settings-sync-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 9px;
+    border-radius: var(--radius-full);
+    background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+    border: 1px solid color-mix(in srgb, var(--accent) 26%, var(--border));
+    color: var(--accent);
+    font-size: var(--font-size-mini);
+    font-weight: var(--font-weight-semibold);
+    white-space: nowrap;
+}
+
+.settings-sync-status {
+    color: var(--success);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
+}
+
+.settings-status-note {
+    margin-top: 4px;
+    color: var(--text-secondary);
+    font-size: var(--font-size-xs);
+}
+
+.settings-status-note--warn {
+    color: var(--warning);
+}
+
+.settings-loading-inline {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--text-muted);
+    font-size: var(--font-size-small);
+}
+
+.settings-option-group__label {
+    padding: var(--space-3) var(--space-5) var(--space-1);
+    color: var(--text-muted);
+    font-size: var(--font-size-mini);
+    font-weight: var(--font-weight-semibold);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.settings-toggle input:disabled + .settings-toggle__track {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .settings-toggle {
@@ -510,6 +628,7 @@
 @media (max-width: 600px) {
 
     .settings-row,
+    .settings-subpanel-header,
     .settings-account,
     .settings-about {
         align-items: flex-start;
