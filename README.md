@@ -207,6 +207,35 @@ desktop entry and hicolor icons under `/usr`. Native packages are preferred on
 Arch: `makepkg` handles dependencies through pacman, while the deb/rpm bundles
 target other distributions.
 
+### AUR
+
+`packaging/aur/` is the working copy of the AUR package
+[`kioku-for-anilist`](https://aur.archlinux.org/packages/kioku-for-anilist).
+It differs from `packaging/arch/` in the two ways the AUR requires: it is
+self-contained (the desktop entry ships next to the PKGBUILD instead of coming
+from `packaging/linux/`) and it pins the release tarball with a real
+`sha256sum` rather than `SKIP`.
+
+Once the package is published, install it with an AUR helper:
+
+```bash
+paru -S kioku-for-anilist
+# or
+makepkg -si   # inside packaging/aur
+```
+
+To publish a new release, bump `pkgver` and reset `pkgrel` to 1 in
+`packaging/aur/PKGBUILD`, refresh the checksums with `updpkgsums`, regenerate
+the metadata with `makepkg --printsrcinfo > .SRCINFO`, then copy `PKGBUILD`,
+`.SRCINFO`, `kioku-for-anilist.desktop` and `LICENSE` into a clone of
+`aur@aur.archlinux.org:kioku-for-anilist.git` and push. The AUR rejects a push
+whose `.SRCINFO` does not match the PKGBUILD, and its guidelines ask for a
+license on the packaging files themselves, which is why `packaging/aur/LICENSE`
+(0BSD) is there next to the PKGBUILD's GPL-3.0-only `license=` for the app.
+
+Remember to bump `packaging/arch/PKGBUILD` as well; it is the local development
+package and is not published.
+
 ## Dependency reference
 
 ### JavaScript / frontend dependencies

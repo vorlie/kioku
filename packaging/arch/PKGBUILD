@@ -1,9 +1,13 @@
 # Maintainer: vorlie <https://github.com/vorlie>
 #
-# Native Arch Linux package for Kioku.
+# Native Arch Linux package for Kioku, for local development builds.
 #
 #   cd packaging/arch
 #   makepkg -si
+#
+# This copy is not what gets published: it skips checksum verification and
+# reads the desktop entry from `packaging/linux/`. The AUR submission, which is
+# self-contained and pins checksums, lives in `packaging/aur/`.
 #
 # Tauri's own bundlers (deb/rpm/AppImage) are bypassed on purpose: pacman
 # packages are built from source and installed under /usr, which is what Arch

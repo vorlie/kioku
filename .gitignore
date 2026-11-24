@@ -13,11 +13,11 @@ dist-ssr
 *.local
 
 # Arch Linux packaging (makepkg build artifacts)
-packaging/arch/src/
-packaging/arch/pkg/
-packaging/arch/*.pkg.tar.zst
-packaging/arch/*.pkg.tar.zst.sig
-packaging/arch/*.tar.gz
+packaging/*/src/
+packaging/*/pkg/
+packaging/*/*.pkg.tar.zst
+packaging/*/*.pkg.tar.zst.sig
+packaging/*/*.tar.gz
 
 # Editor directories and files
 .vscode/*

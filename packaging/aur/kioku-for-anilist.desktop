@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Kioku
+GenericName=Anime and Manga Tracker
+Comment=A polished, modern desktop client for managing your AniList anime and manga libraries.
+Exec=kioku-for-anilist
+Icon=kioku-for-anilist
+Terminal=false
+Categories=AudioVideo;Video;
+Keywords=anime;manga;anilist;tracker;
+StartupNotify=true
+StartupWMClass=kioku-for-anilist
